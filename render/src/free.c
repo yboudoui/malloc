@@ -13,5 +13,6 @@ void free(void* addr)
 
     bin_append(block);
     // munmap()
-    free(block);
+    // Mark the block as free
+    //block->size = toggle_free(block->size);
 }

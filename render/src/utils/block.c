@@ -51,3 +51,15 @@ void    set_block_to_free(t_block block)
     set_tail_metadata(block, size);
     block->curr_block_size = size;
 }
+
+/*
+inline size_t toggle_free(size_t number)
+{
+    return number ^ ((size_t)1 << 0);
+}
+
+inline size_t is_free(size_t number)
+{
+    return (number >> 0) & (size_t)1;
+}
+*/
