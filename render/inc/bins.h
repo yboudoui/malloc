@@ -1,7 +1,7 @@
 #ifndef BINS_H
 #define BINS_H
 
-#include "chunk.h"
+#include "block.h"
 
 #define MAX_BINS    128
 #define SMALL_BIN_COUNT 16  // Number of small bins
@@ -11,7 +11,7 @@
 #define MAX_FAST_SIZE 64
 #define SMALL_BIN_SIZE (MAX_FAST_SIZE + (SMALL_BIN_COUNT * ALIGNMENT)) // Max size for small bins
 
-void        bin_append(size_t size, t_chunk *chunk);
-t_chunk*    bin_remove(size_t size);
+void        bin_append(size_t size, t_block *chunk);
+t_block*    bin_remove(size_t size);
 
 #endif // BINS_H

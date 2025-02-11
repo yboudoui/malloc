@@ -4,8 +4,7 @@
 #include "bins.h"
 
 // Utils
-size_t  align(size_t size);
-void    coalesce(t_chunk* chunk);
+void    coalesce(t_block* chunk);
 
 // Exported functions
 #define EXPORT __attribute__((visibility("default")))

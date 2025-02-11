@@ -10,8 +10,10 @@ TEST_DIR = test
 SRC_DIR = render/src
 INC_DIR = render/inc
 
-SRC += bins.c
-SRC += utils.c
+SRC += utils/bins.c
+SRC += utils/block.c
+SRC += utils/page.c
+SRC += utils/utils.c
 SRC += free.c
 SRC += malloc.c
 SRC += realloc.c

@@ -1,6 +1,6 @@
 #include "bins.h"
 
-t_chunk* bins[MAX_BINS] = {NULL};
+t_block* bins[MAX_BINS] = {NULL};
 
 static int get_bin_index(size_t size)
 {
@@ -9,7 +9,7 @@ static int get_bin_index(size_t size)
     return (size / ALIGNMENT);
 }
 
-void    bin_append(size_t size, t_chunk *chunk)
+void    bin_append(size_t size, t_block *chunk)
 {
     size_t  index;
     
@@ -18,10 +18,10 @@ void    bin_append(size_t size, t_chunk *chunk)
     bins[index] = chunk;
 }
 
-t_chunk*    bin_remove(size_t size)
+t_block*    bin_remove(size_t size)
 {
     size_t      index;
-    t_chunk     *chunk;
+    t_block     *chunk;
 
     index = get_bin_index(size);
     if (bins[index] == NULL)

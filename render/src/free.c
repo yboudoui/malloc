@@ -2,10 +2,8 @@
 
 void free(void* addr)
 {
-    t_chunk* chunk;
+    t_block* chunk;
 
-    if (!addr)
-        return;
     chunk = get_chunk_from_addr(addr);
     if (chunk == NULL)
         return;
