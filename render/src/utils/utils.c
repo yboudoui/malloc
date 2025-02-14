@@ -1,14 +1,14 @@
 #include "malloc.h"
 
-// Function to coalesce adjacent free chunks
-void coalesce(t_block* chunk)
+// Function to coalesce adjacent free blocks
+void coalesce(t_block* block)
 {
-    // Coalesce with the next chunk if it's free
-    t_block* next_chunk = (t_block*)((char*)chunk + chunk->size + sizeof(t_block));
-    if (next_chunk->free) {
-        chunk->size += next_chunk->size + sizeof(t_block); // Increase size
-        chunk->next = next_chunk->next; // Link next free chunk
+    // Coalesce with the next block if it's free
+    t_block* next_block = (t_block*)((char*)block + block->size + sizeof(t_block));
+    if (next_block->free) {
+        block->size += next_block->size + sizeof(t_block); // Increase size
+        block->next = next_block->next; // Link next free block
     } else {
-        chunk->next = NULL; // No next free chunk to coalesce
+        block->next = NULL; // No next free block to coalesce
     }
 }

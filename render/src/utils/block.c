@@ -1,13 +1,13 @@
 #include "block.h"
 
-void*   get_addr_from_chunk(t_block *chunk)
+void*   get_addr_from_block(t_block *block)
 {
-    if (chunk == NULL)
+    if (block == NULL)
         return (NULL);
-    return ((char*)chunk + sizeof(t_block));
+    return ((char*)block + sizeof(t_block));
 }
 
-t_block*   get_chunk_from_addr(void *addr)
+t_block*   get_block_from_addr(void *addr)
 {
     char    *ptr;
 

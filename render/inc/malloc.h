@@ -4,7 +4,7 @@
 #include "bins.h"
 
 // Utils
-void    coalesce(t_block* chunk);
+void    coalesce(t_block* block);
 
 // Exported functions
 #define EXPORT __attribute__((visibility("default")))

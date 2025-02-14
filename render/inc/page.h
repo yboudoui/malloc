@@ -2,6 +2,7 @@
 #define PAGE_H
 
 #include <stddef.h>
+#include "block.h"
 
 typedef struct s_page t_page;
 
@@ -12,6 +13,6 @@ struct s_page {
     t_page  *next;
 };
 
-void*   request_memory_from_page(size_t size);
+t_block*    request_new_block(size_t size);
 
 #endif // PAGE_H

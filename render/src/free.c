@@ -2,21 +2,21 @@
 
 void free(void* addr)
 {
-    t_block* chunk;
+    t_block* block;
 
-    chunk = get_chunk_from_addr(addr);
-    if (chunk == NULL)
+    block = get_block_from_addr(addr);
+    if (block == NULL)
         return;
 
 
-    size_t size = chunk->size;
+    size_t size = block->size;
 
-    // Mark the chunk as free
-    chunk->free = 1;
+    // Mark the block as free
+    block->free = 1;
 
-    // Coalesce with adjacent free chunks
-    coalesce(chunk);
+    // Coalesce with adjacent free blocks
+    coalesce(block);
 
-    bin_append(size, chunk);
-    free(chunk);
+    bin_append(size, block);
+    free(block);
 }

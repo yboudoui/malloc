@@ -8,12 +8,12 @@ static inline size_t align(size_t size)
 
 void*   malloc(size_t size)
 {
-    t_block *chunk;
+    t_block *block;
 
     if (size == 0) return (NULL);
     size = align(size);
-    chunk = bin_remove(size);
-    if(chunk == NULL)
-        chunk = request_memory_from_page(size + sizeof(t_block));
-    return (get_addr_from_chunk(chunk));
+    block = bin_remove(size);
+    if(block == NULL)
+        block = request_new_block(size);
+    return (get_addr_from_block(block));
 }
