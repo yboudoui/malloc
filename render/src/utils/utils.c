@@ -1,4 +1,5 @@
 #include "block.h"
+#include "page.h"
 
 static t_block  get_next_block(t_block block)
 {
@@ -28,10 +29,13 @@ static t_block  is_block_free(t_block block)
 
 static t_block  merge_block(t_block src, t_block dest)
 {
+    t_page  page;
+
     dest->curr_block_size += SIZEOF_BLOCK + src->curr_block_size;
     set_tail_metadata(dest, dest->curr_block_size);
     remove_block(src);
-    // TODO: take into consideration the number of block register in t_page
+    page = (t_page)((char*)src - src->page_offset);
+    page->block_count -= 1;
     return (dest);
 }
 

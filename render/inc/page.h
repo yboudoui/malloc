@@ -16,7 +16,6 @@ struct s_page {
     size_t  fake_prev_block_size; // always 0
 };
 
-t_block request_block(size_t size);
-void    release_block(t_block block);
+t_block request_new_block(size_t size);
 
 #endif // PAGE_H

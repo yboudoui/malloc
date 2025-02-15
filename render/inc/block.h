@@ -15,7 +15,9 @@ struct s_block {
     t_block prev;
 };
 
+
 size_t*  get_tail_metadata(t_block block);
+void set_tail_metadata(t_block block, size_t size);
 
 
 void*   get_addr_from_block(t_block block);

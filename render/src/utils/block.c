@@ -26,7 +26,7 @@ size_t*  get_tail_metadata(t_block block)
     return ((size_t*)addr);
 }
 
-static void set_tail_metadata(t_block block, size_t size)
+void set_tail_metadata(t_block block, size_t size)
 {
     size_t  *tail_metadata;
 

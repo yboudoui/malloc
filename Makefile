@@ -14,9 +14,7 @@ SRC += utils/bins.c
 SRC += utils/block.c
 SRC += utils/page.c
 SRC += utils/utils.c
-SRC += free.c
 SRC += malloc.c
-SRC += realloc.c
 
 SOURCES	=	$(addprefix ${SRC_DIR}/, ${SRC})
 OBJECTS	=	$(patsubst $(SRC_DIR)/%.c, $(BUILD)/%.o, $(SRC))

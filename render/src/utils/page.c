@@ -99,25 +99,18 @@ static size_t   release_memory_from_page(t_page page, size_t size)
 static t_block  acquire_block_from_page(t_page page, size_t size)
 {
     size_t  offset;
+    t_block block;
 
     offset = acquire_memory_from_page(page, size);
     page->block_count += 1;
-    return (set_block((char*)page + offset, size, offset));
+    block = (t_block)(char*)page + offset;
+    return (set_block(block, size, offset));
 }
 
-void            release_block(t_block block)
-{
-    t_page  page;
-
-    page = (t_page)((char*)block - block->page_offset);
-    page->block_count -= 1;
-}
-
-t_block         request_block(size_t size)
+t_block         request_new_block(size_t size)
 {
     t_page  page;
     size_t  total_size;
-    size_t  offset;
 
     total_size = compute_total_block_size(size);
     page = request_page(total_size);
