@@ -3,16 +3,25 @@
 
 #include <stddef.h>
 
-typedef struct s_block t_block;
+typedef struct s_block* t_block;
+
+#define SIZEOF_BLOCK sizeof(struct s_block)
 
 struct s_block {
-    size_t  offset;
-    size_t  size;
-    t_block *next;
-    int     free;
+    size_t  prev_block_size;
+    size_t  curr_block_size;
+    size_t  page_offset;
+    t_block next;
+    t_block *owner; //??
 };
 
-void*       get_addr_from_block(t_block *block);
-t_block*    get_block_from_addr(void *addr);
+size_t*  get_tail_metadata(t_block block);
+
+
+void*   get_addr_from_block(t_block block);
+t_block get_block_from_addr(void *addr);
+
+t_block set_block(t_block block, size_t size, size_t page_offset);
+void    set_block_to_free(t_block block);
 
 #endif // BLOCK_H

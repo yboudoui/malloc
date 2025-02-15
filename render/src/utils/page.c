@@ -3,8 +3,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-
-static size_t  compute_page_size(size_t request_size)
+static size_t   compute_page_size(size_t request_size)
 {
     size_t page_size;
     size_t num_pages;
@@ -14,9 +13,18 @@ static size_t  compute_page_size(size_t request_size)
     return (num_pages * page_size);
 }
 
-static t_page* new_page(size_t size)
+static void     set_page(t_page page, size_t page_size)
 {
-    t_page* page;
+    page->used_space = SIZEOF_PAGE;
+    page->free_space = page_size - page->used_space;
+    page->block_count = 0;
+    page->next = NULL;
+    page->fake_prev_block_size = 0;
+}
+
+static t_page   new_page(size_t size)
+{
+    t_page page;
     size_t  page_size;
 
     page_size = compute_page_size(size);
@@ -27,16 +35,15 @@ static t_page* new_page(size_t size)
         0, 0);
     if (page == MAP_FAILED)
         return (NULL);
-    page->total_space = page_size - sizeof(t_page);
-    page->free_space = page->total_space;
+    set_page(page, page_size);
     return (page);
 }
 
-t_page* pages = NULL;
+t_page pages = NULL;
 
-static t_page*  find_page(size_t size)
+static t_page   find_page(size_t size)
 {
-    t_page* page;
+    t_page page;
 
     page = pages;
     while (page && page->free_space < size)
@@ -44,7 +51,7 @@ static t_page*  find_page(size_t size)
     return (page);
 }
 
-static t_page*  append_page(t_page *page)
+static t_page   append_page(t_page page)
 {
     if (page != NULL)
     {
@@ -54,9 +61,9 @@ static t_page*  append_page(t_page *page)
     return (page);
 }
 
-static t_page*  request_page(size_t size)
+static t_page   request_page(size_t size)
 {
-    t_page* page;
+    t_page page;
 
     page = find_page(size);
     if (page == NULL)
@@ -64,39 +71,58 @@ static t_page*  request_page(size_t size)
     return (page);
 }
 
-static size_t  acquire_memory_from_page(t_page *page, size_t size)
+static size_t   compute_total_block_size(size_t size)
+{
+    return (SIZEOF_BLOCK + size + sizeof(size_t));
+}
+
+static size_t   acquire_memory_from_page(t_page page, size_t size)
 {
     size_t  offset;
-
-    offset = page->total_space - page->free_space;
+    
+    offset = page->used_space;
+    page->used_space += size;
     page->free_space -= size;
-    page->block_count += 1;
     return (offset);
 }
 
-static t_block*    set_block(t_block *block, size_t size, size_t offset)
+static size_t   release_memory_from_page(t_page page, size_t size)
 {
-    size_t  *size_ref;
-
-    block->offset = offset;
-    block->size = size;
-    size_ref = (size_t*)block;
-    size_ref += sizeof(t_block) + size;
-    (*size_ref) = size;
-    return (block);
+    size_t  offset;
+    
+    page->used_space -= size;
+    page->free_space += size;
+    offset = page->used_space;
+    return (offset);
 }
 
-t_block*    request_new_block(size_t size)
+static t_block  acquire_block_from_page(t_page page, size_t size)
 {
-    t_page  *page;
-    t_block *block;
+    size_t  offset;
+
+    offset = acquire_memory_from_page(page, size);
+    page->block_count += 1;
+    return (set_block((char*)page + offset, size, offset));
+}
+
+void            release_block(t_block block)
+{
+    t_page  page;
+
+    page = (t_page)((char*)block - block->page_offset);
+    page->block_count -= 1;
+}
+
+t_block         request_block(size_t size)
+{
+    t_page  page;
     size_t  total_size;
     size_t  offset;
 
-    total_size = sizeof(t_block) + size + sizeof(size_t);
+    total_size = compute_total_block_size(size);
     page = request_page(total_size);
     if (page == NULL) return (NULL);
-    offset = acquire_memory_from_page(page, total_size);
-    block = (t_block*)((char*)page + offset);
-    return (set_block(block, size, offset));
+    // for offsetting with the `prev_block_size`
+    release_memory_from_page(page, sizeof(size_t));
+    return (acquire_block_from_page(page, size));
 }

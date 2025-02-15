@@ -8,7 +8,7 @@ static inline size_t align(size_t size)
 
 void*   malloc(size_t size)
 {
-    t_block *block;
+    t_block block;
 
     if (size == 0) return (NULL);
     size = align(size);
