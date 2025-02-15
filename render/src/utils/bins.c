@@ -9,18 +9,18 @@ static int get_bin_index(size_t size)
     return (size / ALIGNMENT);
 }
 
-void    bin_append(t_block block)
+void    release_block(t_block block)
 {
     size_t  index;
     
     index = get_bin_index(block->curr_block_size);
-    block->owner = NULL;
+    block->prev = NULL;
     block->next = bins[index];
-    bins[index]->owner = &block;
+    bins[index]->prev = block;
     bins[index] = block;
 }
 
-t_block bin_remove(size_t size)
+t_block request_available_block(size_t size)
 {
     size_t  index;
     t_block block;
@@ -30,7 +30,7 @@ t_block bin_remove(size_t size)
         return (NULL);
     block = bins[index];
     bins[index] = block->next;
-    bins[index]->owner = NULL;
+    bins[index]->prev = NULL;
     return (block);
 }
 

@@ -21,6 +21,7 @@ size_t*  get_tail_metadata(t_block block)
 
     addr = (char*)block;
     addr += SIZEOF_BLOCK;
+    // be careful with the flags in block->curr_block_size
     addr += block->curr_block_size;
     return ((size_t*)addr);
 }
@@ -42,7 +43,7 @@ t_block set_block(t_block block, size_t size, size_t page_offset)
     return (block);
 }
 
-void    set_block_to_free(t_block block)
+t_block    set_block_to_free(t_block block)
 {
     size_t  size;
 
@@ -50,6 +51,15 @@ void    set_block_to_free(t_block block)
     size |= 1;
     set_tail_metadata(block, size);
     block->curr_block_size = size;
+    return (block);
+}
+
+void    remove_block(t_block block)
+{
+    if (block->prev)
+        block->prev->next = block->next;
+    if (block->next)
+        block->next->prev = block->prev;
 }
 
 /*

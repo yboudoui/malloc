@@ -1,12 +1,8 @@
 #ifndef MALLOC_H
 #define MALLOC_H
 
-#include "bins.h"
+#include <stddef.h>
 
-// Utils
-void    coalesce(t_block* block);
-
-// Exported functions
 #define EXPORT __attribute__((visibility("default")))
 
 EXPORT void free(void *ptr);

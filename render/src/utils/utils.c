@@ -2,65 +2,55 @@
 
 static t_block  get_next_block(t_block block)
 {
-    size_t  *tail_metadata;
-
-    tail_metadata = get_tail_metadata(block);
-    if ((*tail_metadata) & 2)
-        return ((char*)tail_metadata + sizeof(size_t));
-    return (NULL);
-}
-
-static t_block  get_next_free_block(t_block block)
-{
     t_block next_block;
 
-    next_block = get_next_block(block);
-    if (next_block && (next_block->curr_block_size & 1))
+    next_block = (t_block)get_tail_metadata(block);
+    if (next_block->prev_block_size & 2)
         return (next_block);
     return (NULL);
 }
 
-static t_block  forward_coalesce(t_block block)
+static t_block  get_prev_block(t_block block)
 {
-    t_block next_free_block;
-
-    next_free_block = get_next_free_block(block);
-    while (next_free_block)
+    if (block->prev_block_size & 2)
     {
-        block->curr_block_size += sizeof(size_t) + SIZEOF_BLOCK;
-        block->curr_block_size += next_free_block->curr_block_size;
-        set_tail_metadata(block, block->curr_block_size);
-        next_free_block = get_next_free_block(block);
+        // TODO: be careful with the flags in size
     }
-    return (block);
+    return (NULL);
 }
 
-
-t_block*    get_prev_block(t_block *block)
+static t_block  is_block_free(t_block block)
 {
-    char    *ptr;
-
-    ptr = (char*)block;
-    ptr -= block->prev_size;
-    ptr -= sizeof(t_block);
-    return ((t_block*)ptr);
-}
-
-t_block*    backward_coalescence(t_block *block)
-{
-    t_block *prev_block;
-
-    if (is_free(block->prev_size) == 0)
+    if (block && (block->curr_block_size & 1))
         return (block);
-    prev_block = get_prev_block(block);
-    block = backward_coalescence(prev_block);
-    block->size += next_block->size + sizeof(t_block); // Increase size
-    block->next_free = next_block->next; // Link next free block
+    return (NULL);
 }
 
-t_block* coalesce(t_block* block)
+static t_block  merge_block(t_block src, t_block dest)
 {
-    block = forward_coalescence(block);
-    block = backward_coalescence(block);
+    dest->curr_block_size += SIZEOF_BLOCK + src->curr_block_size;
+    set_tail_metadata(dest, dest->curr_block_size);
+    remove_block(src);
+    // TODO: take into consideration the number of block register in t_page
+    return (dest);
+}
+
+t_block coalesce(t_block block)
+{
+    t_block next;
+    t_block prev;
+
+    next = is_block_free(get_next_block(block));
+    while (next) {
+        block = merge_block(next, block);
+        next = is_block_free(get_next_block(block));
+    }
+
+    prev = is_block_free(get_prev_block(block));
+    while (prev) {
+        block = merge_block(prev, block);
+        prev = is_block_free(get_prev_block(block));
+    }
+
     return (block);
 }
