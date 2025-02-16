@@ -1,4 +1,4 @@
-#include "bins.h"
+#include "utils.h"
 
 t_block bins[MAX_BINS] = {NULL};
 
@@ -12,8 +12,10 @@ static int get_bin_index(size_t size)
 void    release_block(t_block block)
 {
     size_t  index;
-    
-    index = get_bin_index(block->curr_block_size);
+    size_t  size;
+
+    size = get_unflaged_size(block->curr_block_size);
+    index = get_bin_index(size);
     block->prev = NULL;
     block->next = bins[index];
     bins[index]->prev = block;

@@ -1,6 +1,5 @@
 #include "malloc.h"
-#include "page.h"
-#include "bins.h"
+#include "utils.h"
 
 static inline size_t align(size_t size)
 {
@@ -23,29 +22,44 @@ void*   malloc(size_t size)
 void    free(void* addr)
 {
     t_block block;
+    t_page  page;
 
     block = get_block_from_addr(addr);
-    if (block == NULL)
-        return;
+    if (block == NULL) return;
     block = coalesce(block);
     block = set_block_to_free(block);
-    release_block(block);
-    // TODO: In order to `munmap` need to take into consideration the number of block in page
+    page = get_page_from_block(block);
+    if (page->block_count == 1) release_page(page);
+    else release_block(block);
 }
 
-// TODO: remove string.h in favore of a custom memcpy
-#include <string.h>
+static void	*memcpy(void *dest, const void *src, size_t n)
+{
+	unsigned char	*d;
+	unsigned char	*s;
+
+	d = (unsigned char *)dest;
+	s = (unsigned char *)src;
+	if (!d || !s)
+		return (dest);
+	while (n--)
+		*d++ = *s++;
+	return (dest);
+}
+
 void    *realloc(void *ptr, size_t size)
 {
     t_block block;
     void    *new_addr;
+    size_t  old_size;
 
     block = get_block_from_addr(ptr);
-    if (block == NULL)
-        return (NULL);
+    if (block == NULL) return (NULL);
     new_addr = malloc(size);
-    if (new_addr == NULL)
-        return (NULL);
-    // TODO: be careful with the flag in block->curr_block_size
-    return (memcpy(new_addr, ptr, block->curr_block_size));
+    if (new_addr == NULL) return (NULL);
+    old_size = get_unflaged_size(block->curr_block_size);
+    if (old_size < size)
+        size = old_size;
+    memcpy(new_addr, ptr, size);
+    return (free(ptr), new_addr);
 }

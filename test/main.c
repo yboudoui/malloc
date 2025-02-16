@@ -3,30 +3,28 @@
 
 #include "malloc.h"
 
-// Simple testing function
-void test_memory_allocator() {
-    void* ptr1 = malloc(24); // Allocate 24 bytes
-    void* ptr2 = malloc(48); // Allocate 48 bytes
-    void* ptr3 = malloc(8);   // Allocate 8 bytes
+void test_memory_allocator()
+{
+    void* ptr1 = malloc(24);
+    void* ptr2 = malloc(48);
+    void* ptr3 = malloc(8);
 
     printf("Allocated: %p, %p, %p\n", ptr1, ptr2, ptr3);
 
-    free(ptr1); // Free 24 bytes
-    free(ptr2); // Free 48 bytes
-    free(ptr3); // Free 8 bytes
+    free(ptr1);
+    free(ptr2);
+    free(ptr3);
 
-    void* ptr4 = malloc(16); // Allocate 16 bytes
+    void* ptr4 = malloc(16); 
     printf("Allocated after free: %p\n", ptr4);
 
-    // Allocating more memory to trigger coalescing
-    void* ptr5 = malloc(40); // Allocate 40 bytes
+    void* ptr5 = malloc(40);
     printf("Allocated: %p\n", ptr5);
 
-    free(ptr4); // Free 16 bytes
-    free(ptr5); // Free 40 bytes
+    free(ptr4);
+    free(ptr5);
 
-    // Allocating again to see if coalescing works
-    void* ptr6 = malloc(24); // Allocate 24 bytes
+    void* ptr6 = malloc(24); 
     printf("Allocated after coalescing: %p\n", ptr6);
 }
 

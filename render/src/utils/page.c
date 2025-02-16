@@ -1,4 +1,4 @@
-#include "page.h"
+#include "utils.h"
 
 #include <sys/mman.h>
 #include <unistd.h>
@@ -13,12 +13,13 @@ static size_t   compute_page_size(size_t request_size)
     return (num_pages * page_size);
 }
 
-static void     set_page(t_page page, size_t page_size)
+static void     init_page(t_page page, size_t page_size)
 {
     page->used_space = SIZEOF_PAGE;
     page->free_space = page_size - page->used_space;
     page->block_count = 0;
     page->next = NULL;
+    page->prev = NULL;
     page->fake_prev_block_size = 0;
 }
 
@@ -35,7 +36,7 @@ static t_page   new_page(size_t size)
         0, 0);
     if (page == MAP_FAILED)
         return (NULL);
-    set_page(page, page_size);
+    init_page(page, page_size);
     return (page);
 }
 
@@ -53,27 +54,19 @@ static t_page   find_page(size_t size)
 
 static t_page   append_page(t_page page)
 {
-    if (page != NULL)
-    {
-        page->next = pages;
-        pages = page;
-    }
+    if (page == NULL) return (NULL);
+    page->next = pages;
+    if (pages)
+        pages->prev = page;
+    pages = page;
     return (page);
 }
 
 static t_page   request_page(size_t size)
 {
-    t_page page;
-
-    page = find_page(size);
-    if (page == NULL)
-        page = append_page(new_page(size));
-    return (page);
-}
-
-static size_t   compute_total_block_size(size_t size)
-{
-    return (SIZEOF_BLOCK + size + sizeof(size_t));
+    t_page page = find_page(size);
+    if (page != NULL) return (page);
+    return (append_page(new_page(size)));
 }
 
 static size_t   acquire_memory_from_page(t_page page, size_t size)
@@ -96,26 +89,33 @@ static size_t   release_memory_from_page(t_page page, size_t size)
     return (offset);
 }
 
-static t_block  acquire_block_from_page(t_page page, size_t size)
+static t_block  init_block(t_block block, size_t size, size_t page_offset)
 {
-    size_t  offset;
-    t_block block;
-
-    offset = acquire_memory_from_page(page, size);
-    page->block_count += 1;
-    block = (t_block)(char*)page + offset;
-    return (set_block(block, size, offset));
+    block->prev_block_size |= 2;
+    block->page_offset = page_offset;
+    block->curr_block_size = size;
+    set_tail_metadata(block, size);
+    return (block);
 }
 
 t_block         request_new_block(size_t size)
 {
     t_page  page;
-    size_t  total_size;
+    size_t  offset;
 
-    total_size = compute_total_block_size(size);
-    page = request_page(total_size);
+    page = request_page(SIZEOF_BLOCK + size + sizeof(size_t));
     if (page == NULL) return (NULL);
-    // for offsetting with the `prev_block_size`
-    release_memory_from_page(page, sizeof(size_t));
-    return (acquire_block_from_page(page, size));
+    release_memory_from_page(page, sizeof(size_t)); // for offsetting with the `prev_block_size`
+    offset = acquire_memory_from_page(page, size);
+    page->block_count += 1;
+    return (init_block((t_block)(char*)page + offset, size, offset));
+}
+
+void    release_page(t_page page)
+{
+    if (page->prev)
+        page->prev->next = page->next;
+    if (page->next)
+        page->next->prev = page->prev;
+    munmap((void*)page, page->free_space + page->used_space);
 }
