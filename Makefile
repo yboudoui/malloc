@@ -15,6 +15,7 @@ SRC += utils/block.c
 SRC += utils/page.c
 SRC += utils/utils.c
 SRC += malloc.c
+SRC += show.c
 
 SOURCES	=	$(addprefix ${SRC_DIR}/, ${SRC})
 OBJECTS	=	$(patsubst $(SRC_DIR)/%.c, $(BUILD)/%.o, $(SRC))
@@ -22,7 +23,7 @@ OBJECTS	=	$(patsubst $(SRC_DIR)/%.c, $(BUILD)/%.o, $(SRC))
 CC = clang
 FLAGS_ERROR = -Wall -Werror -Wextra
 FLAGS_INCLUDES = -I ${INC_DIR}
-FLAGS_DEBUG = -g3 #-fsanitize=address
+FLAGS_DEBUG = -g3
 FLAGS_COMPILE = -fPIC -shared
 FLAGS = ${FLAGS_INCLUDES} ${FLAGS_ERROR} ${FLAGS_COMPILE} ${FLAGS_DEBUG}
 
@@ -33,8 +34,8 @@ ${NAME}:
 all: ${NAME}
 
 test: re
-	@${CC} ${FLAGS_DEBUG} -o ${TEST_PROGRAM_NAME} ${TEST_DIR}/main.c -L. -l${LIBNAME}
-	sh run.sh; ./${TEST_PROGRAM_NAME}
+	${CC} ${FLAGS_DEBUG}  -L. -l${LIBNAME} ${TEST_DIR}/main.c -o ${TEST_PROGRAM_NAME}
+	sh run.sh; export LD_LIBRARY_PATH=.; ./${TEST_PROGRAM_NAME}
 
 clean:
 	@rm -f ${NAME}

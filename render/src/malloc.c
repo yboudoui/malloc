@@ -3,7 +3,7 @@
 
 static inline size_t align(size_t size)
 {
-    return (size + (ALIGNMENT - 1)) & ~(ALIGNMENT - 1);
+    return ((size + (ALIGNMENT - 1)) & ~(ALIGNMENT - 1));
 }
 
 void*   malloc(size_t size)
@@ -33,7 +33,7 @@ void    free(void* addr)
     else release_block(block);
 }
 
-static void	*memcpy(void *dest, const void *src, size_t n)
+ void	*memcpy(void *dest, const void *src, size_t n)
 {
 	unsigned char	*d;
 	unsigned char	*s;
@@ -46,7 +46,7 @@ static void	*memcpy(void *dest, const void *src, size_t n)
 		*d++ = *s++;
 	return (dest);
 }
-
+/*
 void    *realloc(void *ptr, size_t size)
 {
     t_block block;
@@ -63,3 +63,4 @@ void    *realloc(void *ptr, size_t size)
     memcpy(new_addr, ptr, size);
     return (free(ptr), new_addr);
 }
+*/

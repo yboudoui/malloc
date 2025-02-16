@@ -26,11 +26,12 @@ struct s_page {
     size_t  fake_prev_block_size; // always 0
 };
 
+#define ALIGNMENT 8
+
 #define MAX_BINS    128
 #define SMALL_BIN_COUNT 16  // Number of small bins
 #define FAST_BIN_COUNT 8    // Number of fast bins
 
-#define ALIGNMENT 8
 #define MAX_FAST_SIZE 64
 #define SMALL_BIN_SIZE (MAX_FAST_SIZE + (SMALL_BIN_COUNT * ALIGNMENT)) // Max size for small bins
 

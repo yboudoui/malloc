@@ -7,16 +7,21 @@ size_t  get_unflaged_size(size_t size)
 
 void*   get_addr_from_block(t_block block)
 {
+    char    *ptr;
     if (block == NULL) return (NULL);
-    return ((char*)block + SIZEOF_BLOCK);
+    ptr = (char*)block;
+    ptr += SIZEOF_BLOCK;
+    return ((void*)ptr);
 }
 
 t_block get_block_from_addr(void *addr)
 {
+    char*   ptr;
 
-    if (addr == NULL)
-        return (NULL);
-    return ((t_block)(char*)addr - SIZEOF_BLOCK);
+    ptr = addr;
+    if (ptr == NULL) return (NULL);
+    ptr -= SIZEOF_BLOCK;
+    return ((t_block)ptr);
 }
 
 size_t*  get_tail_metadata(t_block block)

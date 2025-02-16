@@ -3,6 +3,15 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+t_page  global_pages(t_page page)
+{
+    static  t_page pages = NULL;
+
+    if (page != NULL)
+        pages = page;
+    return (pages);
+}
+
 static size_t   compute_page_size(size_t request_size)
 {
     size_t page_size;
@@ -40,13 +49,11 @@ static t_page   new_page(size_t size)
     return (page);
 }
 
-t_page pages = NULL;
-
 static t_page   find_page(size_t size)
 {
     t_page page;
 
-    page = pages;
+    page = global_pages(NULL);
     while (page && page->free_space < size)
         page = page->next;
     return (page);
@@ -55,11 +62,9 @@ static t_page   find_page(size_t size)
 static t_page   append_page(t_page page)
 {
     if (page == NULL) return (NULL);
-    page->next = pages;
-    if (pages)
-        pages->prev = page;
-    pages = page;
-    return (page);
+    page->next = global_pages(NULL);
+    if (page->next) page->next->prev = page;
+    return (global_pages(page));
 }
 
 static t_page   request_page(size_t size)
@@ -79,7 +84,7 @@ static size_t   acquire_memory_from_page(t_page page, size_t size)
     return (offset);
 }
 
-static size_t   release_memory_from_page(t_page page, size_t size)
+/*static*/ size_t   release_memory_from_page(t_page page, size_t size)
 {
     size_t  offset;
     
@@ -101,14 +106,19 @@ static t_block  init_block(t_block block, size_t size, size_t page_offset)
 t_block         request_new_block(size_t size)
 {
     t_page  page;
+    t_block block;
     size_t  offset;
+    size_t  total_size;
 
-    page = request_page(SIZEOF_BLOCK + size + sizeof(size_t));
+    total_size = SIZEOF_BLOCK + size;
+    page = request_page(total_size);
     if (page == NULL) return (NULL);
-    release_memory_from_page(page, sizeof(size_t)); // for offsetting with the `prev_block_size`
-    offset = acquire_memory_from_page(page, size);
     page->block_count += 1;
-    return (init_block((t_block)(char*)page + offset, size, offset));
+    offset = acquire_memory_from_page(page, total_size);
+    offset -= sizeof(size_t);
+    block = (t_block)((char*)page + offset);
+    block = init_block(block, size, offset);
+    return (block);
 }
 
 void    release_page(t_page page)

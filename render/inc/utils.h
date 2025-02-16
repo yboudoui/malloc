@@ -2,7 +2,13 @@
 #define UTILS_H
 
 #include "data_struct.h"
+
 // utils
+t_page  global_pages(t_page page);
+
+t_block  get_next_block(t_block block);
+t_block  is_block_free(t_block block);
+
 t_page  get_page_from_block(t_block block);
 size_t  get_unflaged_size(size_t size);
 size_t  *get_tail_metadata(t_block block);

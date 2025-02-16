@@ -18,7 +18,8 @@ void    release_block(t_block block)
     index = get_bin_index(size);
     block->prev = NULL;
     block->next = bins[index];
-    bins[index]->prev = block;
+    if (bins[index])
+        bins[index]->prev = block;
     bins[index] = block;
 }
 
@@ -32,7 +33,8 @@ t_block request_available_block(size_t size)
         return (NULL);
     block = bins[index];
     bins[index] = block->next;
-    bins[index]->prev = NULL;
+    if (bins[index])
+        bins[index]->prev = NULL;
     return (block);
 }
 

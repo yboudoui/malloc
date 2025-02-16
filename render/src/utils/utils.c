@@ -9,27 +9,29 @@ t_page   get_page_from_block(t_block block)
     return ((t_page)addr);
 }
 
-static t_block  get_next_block(t_block block)
+t_block  get_next_block(t_block block)
 {
-    t_block next_block;
+    size_t  *tail_metadata;
 
-    next_block = (t_block)get_tail_metadata(block);
-    if (next_block->prev_block_size & 2)
-        return (next_block);
+    tail_metadata = get_tail_metadata(block);
+    if ((*tail_metadata) & 2)
+        return ((t_block)tail_metadata);
     return (NULL);
 }
 
 static t_block  get_prev_block(t_block block)
 {
     size_t  prev_size;
+    char    *ptr;
 
     prev_size = get_unflaged_size(block->prev_block_size);
-    if (prev_size == 0)
-        return (NULL);
-    return ((t_block)(char*)block - prev_size - SIZEOF_BLOCK);
+    if (prev_size == 0) return (NULL);
+    ptr = (char*)block;
+    ptr -= prev_size - SIZEOF_BLOCK;
+    return ((t_block)ptr);
 }
 
-static t_block  is_block_free(t_block block)
+t_block  is_block_free(t_block block)
 {
     if (block && (block->curr_block_size & 1))
         return (block);
