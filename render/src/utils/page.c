@@ -5,11 +5,14 @@
 
 t_page  global_pages(t_page page)
 {
-    static  t_page pages = NULL;
+    static struct s_page pages = {};
 
     if (page != NULL)
-        pages = page;
-    return (pages);
+    {
+        pages.next = page;
+        pages.next->prev = &pages;
+    }
+    return (pages.next);
 }
 
 static size_t   compute_page_size(size_t request_size)
@@ -30,6 +33,14 @@ static void     init_page(t_page page, size_t page_size)
     page->next = NULL;
     page->prev = NULL;
     page->fake_prev_block_size = 0;
+}
+
+static void     init_block(t_block block, size_t size, size_t page_offset)
+{
+    block->prev_block_size |= 2;
+    block->page_offset = page_offset;
+    set_tail_metadata(block, size);
+    block->curr_block_size = size | 2;
 }
 
 static t_page   new_page(size_t size)
@@ -94,31 +105,37 @@ static size_t   acquire_memory_from_page(t_page page, size_t size)
     return (offset);
 }
 
-static t_block  init_block(t_block block, size_t size, size_t page_offset)
+static t_block  acquire_block_from_page(t_page page, size_t block_size)
 {
-    block->prev_block_size |= 2;
-    block->page_offset = page_offset;
-    block->curr_block_size = size;
-    set_tail_metadata(block, size);
+    size_t  offset;
+    t_block block;
+
+    page->block_count += 1;
+    offset = acquire_memory_from_page(page, SIZEOF_BLOCK + block_size);
+    offset -= sizeof(size_t);
+    block = (t_block)((char*)page + offset);
+    init_block(block, block_size, offset);
     return (block);
+}
+
+void  release_block_from_page(t_block block)
+{
+    t_page  page;
+    // size_t  size;
+
+    page = get_page_from_block(block);
+    page->block_count -= 1;
+    // size = get_unflaged_size(block->curr_block_size);
+    // release_memory_from_page(page, SIZEOF_BLOCK + size);
 }
 
 t_block         request_new_block(size_t size)
 {
     t_page  page;
-    t_block block;
-    size_t  offset;
-    size_t  total_size;
 
-    total_size = SIZEOF_BLOCK + size;
-    page = request_page(total_size);
+    page = request_page(SIZEOF_BLOCK + size);
     if (page == NULL) return (NULL);
-    page->block_count += 1;
-    offset = acquire_memory_from_page(page, total_size);
-    offset -= sizeof(size_t);
-    block = (t_block)((char*)page + offset);
-    block = init_block(block, size, offset);
-    return (block);
+    return (acquire_block_from_page(page, size));
 }
 
 void    release_page(t_page page)

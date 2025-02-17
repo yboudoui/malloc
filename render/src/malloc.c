@@ -16,6 +16,7 @@ void*   malloc(size_t size)
     block = request_available_block(size);
     if(block == NULL)
         block = request_new_block(size);
+    debug_show_alloc_mem("malloc");
     return (get_addr_from_block(block));
 }
 
@@ -29,8 +30,12 @@ void    free(void* addr)
     block = coalesce(block);
     block = set_block_to_free(block);
     page = get_page_from_block(block);
-    if (page->block_count == 1) release_page(page);
-    else release_block(block);
+    release_block(block);
+    debug_show_alloc_mem("free");
+    if (page->block_count == 1) {
+        release_page(page);
+        return;
+    }
 }
 
  void	*memcpy(void *dest, const void *src, size_t n)

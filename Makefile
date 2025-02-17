@@ -34,7 +34,7 @@ ${NAME}:
 all: ${NAME}
 
 test: re
-	${CC} ${FLAGS_DEBUG}  -L. -l${LIBNAME} ${TEST_DIR}/main.c -o ${TEST_PROGRAM_NAME}
+	${CC} ${FLAGS_DEBUG}  -L. -l${LIBNAME} ${FLAGS_INCLUDES} ${TEST_DIR}/main.c -o ${TEST_PROGRAM_NAME}
 	sh run.sh; export LD_LIBRARY_PATH=.; ./${TEST_PROGRAM_NAME}
 
 clean:

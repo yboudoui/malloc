@@ -5,6 +5,11 @@ size_t  get_unflaged_size(size_t size)
     return (size & ~0b11);
 }
 
+size_t get_flagged_size(size_t size)
+{
+    return (size & 0b11);
+}
+
 void*   get_addr_from_block(t_block block)
 {
     char    *ptr;

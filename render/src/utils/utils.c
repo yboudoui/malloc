@@ -21,14 +21,17 @@ t_block  get_next_block(t_block block)
 
 static t_block  get_prev_block(t_block block)
 {
+    t_block prev_block;
     size_t  prev_size;
     char    *ptr;
 
     prev_size = get_unflaged_size(block->prev_block_size);
     if (prev_size == 0) return (NULL);
     ptr = (char*)block;
-    ptr -= prev_size - SIZEOF_BLOCK;
-    return ((t_block)ptr);
+    ptr -= prev_size;
+    ptr -= SIZEOF_BLOCK;
+    prev_block = (t_block)ptr;
+    return (prev_block);
 }
 
 t_block  is_block_free(t_block block)
@@ -48,13 +51,22 @@ static void     remove_block(t_block block)
 
 static t_block  merge_block(t_block src, t_block dest)
 {
-    t_page  page;
+    size_t  dst_size;
+    size_t  src_size;
+    size_t  *src_tail_metadata;
+    size_t  flags;
+    size_t  size;
+    
+    dst_size = get_unflaged_size(dest->curr_block_size);
+    src_size = get_unflaged_size(src->curr_block_size);
+    src_tail_metadata = get_tail_metadata(src);
+    flags = get_flagged_size(*src_tail_metadata);
 
-    dest->curr_block_size += SIZEOF_BLOCK + src->curr_block_size;
+    size = dst_size + SIZEOF_BLOCK + src_size;
+    dest->curr_block_size = size | flags;
     set_tail_metadata(dest, dest->curr_block_size);
     remove_block(src);
-    page = get_page_from_block(src);
-    page->block_count -= 1;
+    release_block_from_page(src);
     return (dest);
 }
 

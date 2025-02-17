@@ -11,6 +11,9 @@ t_block  is_block_free(t_block block);
 
 t_page  get_page_from_block(t_block block);
 size_t  get_unflaged_size(size_t size);
+size_t  get_flagged_size(size_t size);
+
+
 size_t  *get_tail_metadata(t_block block);
 void    set_tail_metadata(t_block block, size_t size);
 void*   get_addr_from_block(t_block block);
@@ -21,7 +24,12 @@ t_block set_block_to_free(t_block block);
 t_block request_new_block(size_t size);
 t_block request_available_block(size_t size);
 t_block coalesce(t_block block);
+void    release_block_from_page(t_block block);
+
 void    release_block(t_block block);
 void    release_page(t_page page);
+
+
+void    debug_show_alloc_mem(char* msg);
 
 #endif // UTILS_H
