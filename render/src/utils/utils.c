@@ -11,10 +11,10 @@ t_page   get_page_from_block(t_block block)
 
 t_block  get_next_block(t_block block)
 {
-    size_t  *tail_metadata;
+    t_size    *tail_metadata;
 
     tail_metadata = get_tail_metadata(block);
-    if ((*tail_metadata) & 2)
+    if (tail_metadata->flag.flag & 2)
         return ((t_block)tail_metadata);
     return (NULL);
 }
@@ -36,7 +36,7 @@ static t_block  get_prev_block(t_block block)
 
 t_block  is_block_free(t_block block)
 {
-    if (block && (block->curr_block_size & 1))
+    if (block && block->curr_block_size.flag.flag & 1)
         return (block);
     return (NULL);
 }
@@ -53,18 +53,18 @@ static t_block  merge_block(t_block src, t_block dest)
 {
     size_t  dst_size;
     size_t  src_size;
-    size_t  *src_tail_metadata;
-    size_t  flags;
+    t_size  *src_tail_metadata;
+    t_size  *dst_tail_metadata;
     size_t  size;
     
     dst_size = get_unflaged_size(dest->curr_block_size);
     src_size = get_unflaged_size(src->curr_block_size);
     src_tail_metadata = get_tail_metadata(src);
-    flags = get_flagged_size(*src_tail_metadata);
 
     size = dst_size + SIZEOF_BLOCK + src_size;
-    dest->curr_block_size = size | flags;
-    set_tail_metadata(dest, dest->curr_block_size);
+    dest->curr_block_size.flag.flag = src_tail_metadata->flag.flag;
+    dst_tail_metadata = get_tail_metadata(dest);
+    dst_tail_metadata->raw = dest->curr_block_size.raw;
     remove_block(src);
     release_block_from_page(src);
     return (dest);

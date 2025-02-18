@@ -37,10 +37,15 @@ static void     init_page(t_page page, size_t page_size)
 
 static void     init_block(t_block block, size_t size, size_t page_offset)
 {
-    block->prev_block_size |= 2;
+    t_size  *tail_metadata;
+
     block->page_offset = page_offset;
-    set_tail_metadata(block, size);
-    block->curr_block_size = size | 2;
+    block->prev_block_size.flag.flag = 2;
+    tail_metadata = get_tail_metadata(block);
+    tail_metadata->raw = size;
+    // set_tail_metadata(block, size);
+    block->curr_block_size.raw = size;
+    block->curr_block_size.flag.flag = 2;
 }
 
 static t_page   new_page(size_t size)

@@ -32,10 +32,7 @@ void    free(void* addr)
     page = get_page_from_block(block);
     release_block(block);
     debug_show_alloc_mem("free");
-    if (page->block_count == 1) {
-        release_page(page);
-        return;
-    }
+    if (page->block_count == 1) release_page(page);
 }
 
  void	*memcpy(void *dest, const void *src, size_t n)

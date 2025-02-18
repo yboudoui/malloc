@@ -9,9 +9,17 @@ typedef struct s_page*  t_page;
 #define SIZEOF_BLOCK    sizeof(struct s_block)
 #define SIZEOF_PAGE     sizeof(struct s_page)
 
+typedef union u_size {
+    struct {
+        size_t  flag:2;
+        size_t  unflag:((sizeof(size_t) * 8) - 2);
+    }       flag;
+    size_t  raw;
+} t_size;
+
 struct s_block {
-    size_t  prev_block_size;
-    size_t  curr_block_size;
+    t_size  prev_block_size;
+    t_size  curr_block_size;
     size_t  page_offset;
     t_block next;
     t_block prev;

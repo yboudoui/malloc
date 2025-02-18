@@ -7,8 +7,10 @@ int main(void)
     void* ptr3 = malloc(8);
 
     free(ptr2);
+    ptr2 = malloc(48);
     free(ptr3);
     free(ptr1);
+    free(ptr2);
 
     void* ptr4 = malloc(16);
     void* ptr5 = malloc(40);

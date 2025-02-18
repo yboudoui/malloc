@@ -2,7 +2,7 @@
 
 t_block bins[MAX_BINS] = {NULL};
 
-static int get_bin_index(size_t size)
+static size_t get_bin_index(size_t size)
 {
     if (size > MAX_FAST_SIZE)
         size -= MAX_FAST_SIZE;
@@ -17,8 +17,6 @@ void    release_block(t_block block)
 
     size = get_unflaged_size(block->curr_block_size);
     index = get_bin_index(size);
-    if (!block->prev && !block->next && !bins[index])
-        return;
     block->prev = NULL;
     block->next = bins[index];
     if (block->next)
@@ -27,6 +25,7 @@ void    release_block(t_block block)
 
     page = get_page_from_block(block);
     page->block_count -= 1;
+    set_block_to_free(block);
 }
 
 t_block request_available_block(size_t size)
@@ -42,7 +41,7 @@ t_block request_available_block(size_t size)
     bins[index] = block->next;
 
     page = get_page_from_block(block);
-    page->block_count -= 1;
-    return (block);
+    page->block_count += 1;
+    return (set_block_to_not_free(block));
 }
 
