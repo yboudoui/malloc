@@ -52,9 +52,8 @@ static t_block  show_block_info(t_block block)
     char    *color;
     size_t  size;
 
-    color = RED;
-    if (is_block_free(block)) color = GREEN;
-    size = get_unflaged_size(block->curr_block_size);
+    color = (block->size & FREE) ? GREEN : RED;
+    size = UNFLAG(block->size);
     print_fd(1, "%s[%d>%d]%s ",
         color,
         size, SIZEOF_BLOCK + size,
@@ -71,11 +70,11 @@ static t_page   show_page_info(t_page page)
     print_fd(fd, "page addr: %x |", page);
     print_fd(fd, " space: %s%d%s/%s%d%s |",
         RED    ,page->used_space - SIZEOF_PAGE, CLEAR,
-        GREEN  ,page->free_space - SIZEOF_PAGE, CLEAR
+        GREEN  ,UNFLAG(page->free_space.size) - SIZEOF_PAGE, CLEAR
     );
     print_fd(fd, " block count: %d\n", page->block_count);
 
-    block = (t_block)&page->fake_prev_block_size;
+    block = &page->free_space;
     index = 0;
     while (block)
     {

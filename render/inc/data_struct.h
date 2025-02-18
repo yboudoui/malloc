@@ -2,6 +2,7 @@
 #define DATA_STRUCT_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 typedef struct s_block* t_block;
 typedef struct s_page*  t_page;
@@ -9,30 +10,27 @@ typedef struct s_page*  t_page;
 #define SIZEOF_BLOCK    sizeof(struct s_block)
 #define SIZEOF_PAGE     sizeof(struct s_page)
 
-typedef union u_size {
-    struct {
-        size_t  flag:2;
-        size_t  unflag:((sizeof(size_t) * 8) - 2);
-    }       flag;
-    size_t  raw;
-} t_size;
+#define UNFLAG(size) (size_t)(size & ~0b11)
+#define FLAG(size) (size_t)(size & 0b11)
 
 struct s_block {
-    t_size  prev_block_size;
-    t_size  curr_block_size;
+    size_t  prev_block_size;
+    size_t  size;
     size_t  page_offset;
     t_block next;
     t_block prev;
 };
 
 struct s_page {
-    size_t  used_space;
-    size_t  free_space;
-    size_t  block_count;
-    t_page  next;
-    t_page  prev;
-    size_t  fake_prev_block_size; // always 0
+    t_page          next;
+    t_page          prev;
+    size_t          block_count;
+    size_t          used_space;
+    struct s_block  free_space;
 };
+
+#define FREE 1
+#define UNFREE ~1
 
 #define ALIGNMENT 8
 

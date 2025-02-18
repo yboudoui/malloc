@@ -2,90 +2,61 @@
 
 t_page   get_page_from_block(t_block block)
 {
-    char    *addr;
+    uint8_t *addr;
 
-    addr = (char*)block;
+    addr = (uint8_t*)block;
     addr -= block->page_offset;
     return ((t_page)addr);
 }
 
 t_block  get_next_block(t_block block)
 {
-    t_size    *tail_metadata;
-
-    tail_metadata = get_tail_metadata(block);
-    if (tail_metadata->flag.flag & 2)
-        return ((t_block)tail_metadata);
-    return (NULL);
-}
-
-static t_block  get_prev_block(t_block block)
-{
-    t_block prev_block;
-    size_t  prev_size;
-    char    *ptr;
-
-    prev_size = get_unflaged_size(block->prev_block_size);
-    if (prev_size == 0) return (NULL);
-    ptr = (char*)block;
-    ptr -= prev_size;
-    ptr -= SIZEOF_BLOCK;
-    prev_block = (t_block)ptr;
-    return (prev_block);
-}
-
-t_block  is_block_free(t_block block)
-{
-    if (block && block->curr_block_size.flag.flag & 1)
-        return (block);
-    return (NULL);
-}
-
-static void     remove_block(t_block block)
-{
-    if (block->prev)
-        block->prev->next = block->next;
-    if (block->next)
-        block->next->prev = block->prev;
-}
-
-static t_block  merge_block(t_block src, t_block dest)
-{
-    size_t  dst_size;
-    size_t  src_size;
-    t_size  *src_tail_metadata;
-    t_size  *dst_tail_metadata;
-    size_t  size;
-    
-    dst_size = get_unflaged_size(dest->curr_block_size);
-    src_size = get_unflaged_size(src->curr_block_size);
-    src_tail_metadata = get_tail_metadata(src);
-
-    size = dst_size + SIZEOF_BLOCK + src_size;
-    dest->curr_block_size.flag.flag = src_tail_metadata->flag.flag;
-    dst_tail_metadata = get_tail_metadata(dest);
-    dst_tail_metadata->raw = dest->curr_block_size.raw;
-    remove_block(src);
-    release_block_from_page(src);
-    return (dest);
-}
-
-t_block coalesce(t_block block)
-{
     t_block next;
-    t_block prev;
 
-    next = is_block_free(get_next_block(block));
-    while (next) {
-        block = merge_block(next, block);
-        next = is_block_free(get_next_block(block));
-    }
+    if (UNFLAG(block->size) == 0) return (NULL);
+    next = addr_offset(block, SIZEOF_BLOCK + UNFLAG(block->size));
+    return (UNFLAG(next->prev_block_size) ? next : NULL);
+}
 
-    prev = is_block_free(get_prev_block(block));
-    while (prev) {
-        block = merge_block(block, prev);
-        prev = is_block_free(get_prev_block(block));
-    }
+t_block  get_prev_block(t_block block)
+{
+    size_t  size;
 
+    size = UNFLAG(block->prev_block_size);
+    return (size ? addr_offset(block, -(SIZEOF_BLOCK + size)) : NULL);
+}
+
+void*   addr_offset(void *addr, size_t offset) {
+    return (addr ? (uint8_t*)addr + offset : NULL);
+}
+
+t_block set_block_flag(t_block block, size_t flag)
+{
+    t_block next_block;
+
+    next_block = addr_offset(block, SIZEOF_BLOCK + UNFLAG(block->size));
+    block->size |= flag;
+    next_block->prev_block_size = block->size;
     return (block);
 }
+
+t_block unset_block_flag(t_block block, size_t flag)
+{
+    t_block next_block;
+
+    next_block = addr_offset(block, SIZEOF_BLOCK + UNFLAG(block->size));
+    block->size &= ~flag;
+    next_block->prev_block_size = block->size;
+    return (block);
+}
+
+t_block set_block_size(t_block block, size_t size)
+{
+    t_block next_block;
+
+    next_block = addr_offset(block, SIZEOF_BLOCK + size);
+    block->size = size;
+    next_block->prev_block_size = UNFLAG(block->size);
+    return (block);
+}
+

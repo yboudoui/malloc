@@ -1,22 +1,67 @@
 #include "malloc.h"
 
+#include <stdlib.h>
+#include <time.h>
+
+#define ARRAY_CAPACITY 2048
+
+int min_max_rand(int min, int max) {
+    return (min + rand() % (max - min + 1));
+}
+
+void*   arr_alloc[ARRAY_CAPACITY] = {NULL};
+
+void    full_alloc(void)
+{
+    size_t  i;
+
+    i = 0;
+    while (i < ARRAY_CAPACITY)
+    {
+        if (arr_alloc[i] == NULL)
+            arr_alloc[i] = malloc(min_max_rand(0,4096*2));
+        i += 1;
+    }
+}
+
+void    full_free(void)
+{
+    size_t  i;
+
+    i = 0;
+    while (i < ARRAY_CAPACITY)
+    {
+        free(arr_alloc[i]);
+        arr_alloc[i] = NULL;
+        i += 1;
+    }
+}
+
+void    rand_free(void)
+{
+    size_t  i;
+    size_t  j;
+    void    *addr;
+
+    i = 0;
+    while (i < ARRAY_CAPACITY / 2)
+    {
+        j = min_max_rand(0,ARRAY_CAPACITY);
+        addr = arr_alloc[j];
+        if (addr == NULL) continue;
+        free(arr_alloc[i]);
+        arr_alloc[i] = NULL;
+    }
+}
+
+
 int main(void)
 {
-    void* ptr1 = malloc(24);
-    void* ptr2 = malloc(48);
-    void* ptr3 = malloc(8);
+    srand(time(NULL));
 
-    free(ptr2);
-    ptr2 = malloc(48);
-    free(ptr3);
-    free(ptr1);
-    free(ptr2);
-
-    void* ptr4 = malloc(16);
-    void* ptr5 = malloc(40);
-    free(ptr4);
-    free(ptr5);
-    
-    void* ptr6 = malloc(24); 
+    full_alloc();
+    rand_free();
+    full_alloc();
+    full_free();
     return 0;
 }

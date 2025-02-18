@@ -1,59 +1,30 @@
 #include "utils.h"
 
-size_t  get_unflaged_size(t_size size)
+static t_block  merge_block(t_block src, t_block dst)
 {
-    return (size.raw - size.flag.flag);
+    if (src->prev) src->prev->next = src->next;
+    if (src->next) src->next->prev = src->prev;
+    set_block_size(dst, UNFLAG(dst->size) + SIZEOF_BLOCK + UNFLAG(src->size));
+    get_page_from_block(dst)->block_count -= 1;
+    return (dst);
 }
 
-void*   get_addr_from_block(t_block block)
+t_block coalesce(t_block block)
 {
-    unsigned char    *ptr;
+    t_block next;
+    t_block prev;
 
-    ptr = (unsigned char*)block;
-    if (ptr == NULL) return (NULL);
-    ptr += SIZEOF_BLOCK;
-    return ((void*)ptr);
-}
+    next = get_next_block(block);
+    while (next && (next->size & FREE)) {
+        block = merge_block(next, block);
+        next = get_next_block(block);
+    }
 
-t_block get_block_from_addr(void *addr)
-{
-    unsigned char*   ptr;
+    prev = get_prev_block(block);
+    while (prev && (prev->size & FREE)) {
+        block = merge_block(block, prev);
+        prev = get_prev_block(block);
+    }
 
-    ptr = (unsigned char*)addr;
-    if (ptr == NULL) return (NULL);
-    ptr -= SIZEOF_BLOCK;
-    return ((t_block)ptr);
-}
-
-t_size*  get_tail_metadata(t_block block)
-{
-    char*   addr;
-
-    addr = (char*)block;
-    addr += SIZEOF_BLOCK;
-    addr += get_unflaged_size(block->curr_block_size);
-    return ((t_size*)addr);
-}
-
-t_block    set_block_to_free(t_block block)
-{
-    t_size  *tail_metadata;
-
-    block->curr_block_size.flag.flag |= 1;
-    tail_metadata = get_tail_metadata(block);
-    tail_metadata->flag.flag |= 1;
     return (block);
 }
-
-t_block    set_block_to_not_free(t_block block)
-{
-    t_size  *tail_metadata;
-
-    block->curr_block_size.flag.flag |= ~1;
-    tail_metadata = get_tail_metadata(block);
-    // tail_metadata->flag.flag |= ~1;
-
-    tail_metadata->raw = block->curr_block_size.raw;
-    return (block);
-}
-

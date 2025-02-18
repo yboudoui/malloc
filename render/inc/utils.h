@@ -7,28 +7,26 @@
 t_page  global_pages(t_page page);
 
 t_block get_next_block(t_block block);
-t_block is_block_free(t_block block);
+t_block get_prev_block(t_block block);
 
 t_page  get_page_from_block(t_block block);
-size_t  get_unflaged_size(t_size size);
 
-t_size* get_tail_metadata(t_block block);
+void*   addr_offset(void *addr, size_t offset);
 
-void*   get_addr_from_block(t_block block);
-t_block get_block_from_addr(void *addr);
-t_block set_block_to_free(t_block block);
-t_block set_block_to_not_free(t_block block);
+t_block set_block_flag(t_block block, size_t flag);
+t_block unset_block_flag(t_block block, size_t flag);
+t_block set_block_size(t_block block, size_t size);
+
 
 
 // alloc / release
 t_block request_new_block(size_t size);
+
 t_block request_available_block(size_t size);
 t_block coalesce(t_block block);
-void    release_block_from_page(t_block block);
 
 void    release_block(t_block block);
 void    release_page(t_page page);
-
 
 void    debug_show_alloc_mem(char* msg);
 
