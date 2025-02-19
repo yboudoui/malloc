@@ -14,14 +14,18 @@ static void put_number_base_fd(int fd, long num, char *base, int base_len)
 {
     if (num >= base_len)
         put_number_base_fd(fd, num / base_len, base, base_len);
-    write(1, &base[num % base_len], fd);
+    write(fd, &base[num % base_len], 1);
 }
 
 static void put_str_fd(int fd, char *str)
 {
     if (str == NULL) return;
-    while (*str)
-        write(1, str++, fd);
+    int index = 0;
+    while (str[index])
+    {
+        write(fd, &str[index], 1);
+        index += 1;
+    }
 }
 
 void print_fd(int fd, const char *format, ...)
@@ -47,25 +51,24 @@ void print_fd(int fd, const char *format, ...)
     va_end(args);
 }
 
-static t_block  show_block_info(t_block block)
+static t_block  show_block_info(int fd, t_block block)
 {
     char    *color;
     size_t  size;
 
     color = (block->size & FREE) ? GREEN : RED;
     size = UNFLAG(block->size);
-    print_fd(1, "%s[%d>%d]%s ",
+    print_fd(fd, "%s[%d>%d]%s ",
         color,
         size, SIZEOF_BLOCK + size,
         CLEAR);
     return (get_next_block(block));
 }
 
-static t_page   show_page_info(t_page page)
+static t_page   show_page_info(int fd, t_page page)
 {
     t_block block;
     size_t  index;
-    int     fd = 1;
 
     print_fd(fd, "page addr: %x |", page);
     print_fd(fd, " space: %s%d%s/%s%d%s |",
@@ -78,7 +81,7 @@ static t_page   show_page_info(t_page page)
     index = 0;
     while (block)
     {
-        block = show_block_info(block);
+        block = show_block_info(fd, block);
         if (index == 8) {
             write(fd, "\n", 1);
             index = 0;
@@ -92,11 +95,11 @@ static t_page   show_page_info(t_page page)
 void    show_alloc_mem(void)
 {
 	t_page  page;
+    int     fd;
 
+    fd = 1;
     page = global_pages(NULL);
-    if (page == NULL) return;
-	while (page)
-        page = show_page_info(page);
+	while (page) page = show_page_info(fd, page);
 }
 
 void    debug_show_alloc_mem(char* msg)

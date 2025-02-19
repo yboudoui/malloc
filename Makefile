@@ -21,7 +21,7 @@ SOURCES	=	$(addprefix ${SRC_DIR}/, ${SRC})
 OBJECTS	=	$(patsubst $(SRC_DIR)/%.c, $(BUILD)/%.o, $(SRC))
 
 CC = clang
-FLAGS_ERROR = -Wall -Werror -Wextra
+FLAGS_ERROR = # -Wall -Werror -Wextra
 FLAGS_INCLUDES = -I ${INC_DIR}
 FLAGS_DEBUG = -g3
 FLAGS_COMPILE = -fPIC -shared

@@ -6,20 +6,28 @@ static size_t get_bin_index(size_t size)
 {
     if (size > MAX_FAST_SIZE)
         size -= MAX_FAST_SIZE;
-    return (size / ALIGNMENT);
+    size /= ALIGNMENT;
+    return (size > 126 ? 127 : size);
+}
+
+t_block remove_block(t_block block)
+{
+    if (block->next) block->next->prev = block->prev;
+    if (block->prev) block->prev->next = block->next;
+    block->next = NULL;
+    block->prev = NULL;
+    return (block);
 }
 
 void    release_block(t_block block)
 {
-    size_t  index;
-    size_t  size;
+    t_block bin;
 
-    size = UNFLAG(block->size);
-    index = get_bin_index(size);
-    if (index > 126) index = 127;
-    block->prev = (bins + index);
-    block->next = (bins + index)->next;
-    bins[index].next = block;
+    bin = bins + get_bin_index(UNFLAG(block->size));
+
+    block->prev = bin;
+    block->next = bin->next;
+    bin->next = block;
 
     get_page_from_block(block)->block_count -= 1;
     set_block_flag(block, FREE);
@@ -27,15 +35,15 @@ void    release_block(t_block block)
 
 t_block request_available_block(size_t size)
 {
-    size_t  index;
+    t_block bin;
     t_block block;
 
-    index = get_bin_index(size);
-    if (index > 126) index = 127;
-    block = bins[index].next;
+    bin = bins + get_bin_index(size);
+
+    block = bin->next;
     if (block == NULL) return (NULL);
-    bins[index].next = block->next;
-    block->next->prev = &bins[index];
+    bin->next = block->next;
+    if (bin->next) bin->next->prev = bin;
 
     block->next = NULL;
     block->prev = NULL;

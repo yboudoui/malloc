@@ -11,7 +11,8 @@ t_page  global_pages(t_page page)
     page->prev = &pages;
     page->next = pages.next;
     if (page->next) page->next->prev = page;
-    return (page);
+    pages.next = page;
+    return (pages.next);
 }
 
 static size_t   compute_page_size(size_t request_size)
@@ -26,7 +27,10 @@ static size_t   compute_page_size(size_t request_size)
 
 static void init_block(t_block block, size_t size, size_t page_offset)
 {
+    block->prev_block_size = 0;
     block->page_offset = page_offset;
+    block->next = NULL;
+    block->prev = NULL;
     set_block_size(block, size);
 }
 
@@ -97,7 +101,7 @@ static t_block  fragment_block(t_block block, size_t size)
     flag = FLAG(block->size);
 
     new_block = addr_offset(block, new_size + SIZEOF_BLOCK);
-    init_block(new_block, size, block->page_offset + new_size);
+    init_block(new_block, size, block->page_offset + new_size + SIZEOF_BLOCK);
     init_block(block, new_size, block->page_offset);
     set_block_flag(block, flag);
     new_block->prev_block_size = block->size;

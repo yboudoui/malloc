@@ -15,7 +15,8 @@ t_block  get_next_block(t_block block)
 
     if (UNFLAG(block->size) == 0) return (NULL);
     next = addr_offset(block, SIZEOF_BLOCK + UNFLAG(block->size));
-    return (UNFLAG(next->prev_block_size) ? next : NULL);
+    if (UNFLAG(next->prev_block_size)) return (next);
+    return (NULL);
 }
 
 t_block  get_prev_block(t_block block)
@@ -23,7 +24,8 @@ t_block  get_prev_block(t_block block)
     size_t  size;
 
     size = UNFLAG(block->prev_block_size);
-    return (size ? addr_offset(block, -(SIZEOF_BLOCK + size)) : NULL);
+    if (size == 0) return (NULL);
+    return (addr_offset(block, -(SIZEOF_BLOCK + size)));
 }
 
 void*   addr_offset(void *addr, size_t offset) {

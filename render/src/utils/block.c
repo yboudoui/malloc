@@ -1,17 +1,12 @@
 #include "utils.h"
 
-void    remove_block(t_block block)
-{
-    if (block->next)
-        block->next->prev = block->prev;
-    if (block->prev)
-        block->prev->next = block->next;
-}
-
 static t_block  merge_block(t_block src, t_block dst)
 {
+    size_t  size;
+
+    size = UNFLAG(dst->size) + SIZEOF_BLOCK + UNFLAG(src->size);
     remove_block(src);
-    set_block_size(dst, UNFLAG(dst->size) + SIZEOF_BLOCK + UNFLAG(src->size));
+    set_block_size(dst, size);
     get_page_from_block(dst)->block_count -= 1;
     return (dst);
 }
