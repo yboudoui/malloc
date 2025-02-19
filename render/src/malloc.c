@@ -27,14 +27,13 @@ void    free(void* addr)
     block = addr_offset(addr, -SIZEOF_BLOCK);
     if (block == NULL) return;
     block = coalesce(block);
-    block = set_block_flag(block, FREE);
     page = get_page_from_block(block);
     release_block(block);
     debug_show_alloc_mem("free");
-    if (page->block_count == 0) release_page(page);
+    if (page->block_count == 1) release_page(page);
 }
 
- void	*memcpy(void *dest, const void *src, size_t n)
+void	*memcpy(void *dest, const void *src, size_t n)
 {
 	unsigned char	*d;
 	unsigned char	*s;

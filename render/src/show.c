@@ -24,7 +24,7 @@ static void put_str_fd(int fd, char *str)
         write(1, str++, fd);
 }
 
-static void print_fd(int fd, const char *format, ...)
+void print_fd(int fd, const char *format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -95,11 +95,13 @@ void    show_alloc_mem(void)
 
     page = global_pages(NULL);
     if (page == NULL) return;
-	while (page) page = show_page_info(page);
+	while (page)
+        page = show_page_info(page);
 }
 
 void    debug_show_alloc_mem(char* msg)
 {
-    print_fd(1, "%s%s%s :%s ", BOLD, WHITE, msg, CLEAR);
-    show_alloc_mem();
+    (void)msg;
+    // print_fd(1, "%s%s%s :%s ", BOLD, WHITE, msg, CLEAR);
+    // show_alloc_mem();
 }

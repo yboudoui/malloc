@@ -17,6 +17,7 @@ t_block set_block_flag(t_block block, size_t flag);
 t_block unset_block_flag(t_block block, size_t flag);
 t_block set_block_size(t_block block, size_t size);
 
+void    remove_block(t_block block);
 
 
 // alloc / release
