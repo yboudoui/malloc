@@ -101,3 +101,7 @@ int main(int ac, char *av[])
 // 1739990054 prev_block_size
 // 1739991150 [page_offset] check fragment_block
 // 1739991357 [block -> next/prev] 
+
+
+
+// infinit loop 1740142750

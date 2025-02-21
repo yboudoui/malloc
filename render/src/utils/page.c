@@ -25,14 +25,7 @@ static size_t   compute_page_size(size_t request_size)
     return (num_pages * page_size);
 }
 
-static void init_block(t_block block, size_t size, size_t page_offset)
-{
-    block->prev_block_size = 0;
-    block->page_offset = page_offset;
-    block->next = NULL;
-    block->prev = NULL;
-    set_block_size(block, size);
-}
+
 
 static void     init_page(t_page page, size_t page_size)
 {
@@ -45,6 +38,7 @@ static void     init_page(t_page page, size_t page_size)
         page_size - page->used_space,
         SIZEOF_PAGE - SIZEOF_BLOCK);
     get_next_block(&page->free_space)->prev_block_size = 0;
+    // release_block(&page->free_space);
     set_block_flag(&page->free_space, FREE);
 }
 
@@ -90,7 +84,7 @@ static t_page   request_page(size_t size)
     return (append_page(new_page(size)));
 }
 
-static t_block  fragment_block(t_block block, size_t size)
+t_block         fragment_block(t_block block, size_t size)
 {
     size_t  flag;
     t_block new_block;
@@ -121,7 +115,7 @@ t_block         request_new_block(size_t size)
 
 void    release_page(t_page page)
 {
-    remove_block(&page->free_space);
+    // remove_block(&page->free_space);
     if (page->next) page->next->prev = page->prev;
     if (page->prev) page->prev->next = page->next;
     munmap((void*)page,

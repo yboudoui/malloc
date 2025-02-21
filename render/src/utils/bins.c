@@ -7,11 +7,12 @@ static size_t get_bin_index(size_t size)
     if (size > MAX_FAST_SIZE)
         size -= MAX_FAST_SIZE;
     size /= ALIGNMENT;
-    return (size > 126 ? 127 : size);
+    return (size > 127 ? 127 : size);
 }
 
 t_block remove_block(t_block block)
 {
+    if (!block) return(NULL);
     if (block->next) block->next->prev = block->prev;
     if (block->prev) block->prev->next = block->next;
     block->next = NULL;
@@ -19,35 +20,30 @@ t_block remove_block(t_block block)
     return (block);
 }
 
+void    insert_after(t_block current, t_block new_block)
+{
+    if (!current || !new_block) return; 
+
+    new_block->next = current->next;
+    new_block->prev = current;
+
+    if (current->next) current->next->prev = new_block;
+    current->next = new_block;
+}
+
 void    release_block(t_block block)
 {
-    t_block bin;
+    size_t  index;
 
-    bin = bins + get_bin_index(UNFLAG(block->size));
-
-    block->prev = bin;
-    block->next = bin->next;
-    bin->next = block;
-
-    get_page_from_block(block)->block_count -= 1;
-    set_block_flag(block, FREE);
+    index = get_bin_index(UNFLAG(block->size));
+    insert_after(&bins[index], block);
 }
 
 t_block request_available_block(size_t size)
 {
-    t_block bin;
-    t_block block;
+    size_t  index;
 
-    bin = bins + get_bin_index(size);
-
-    block = bin->next;
-    if (block == NULL) return (NULL);
-    bin->next = block->next;
-    if (bin->next) bin->next->prev = bin;
-
-    block->next = NULL;
-    block->prev = NULL;
-    get_page_from_block(block)->block_count += 1;
-    return (unset_block_flag(block, FREE));
+    index = get_bin_index(size);
+    return (remove_block(bins[index].next));
 }
 
