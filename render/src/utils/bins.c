@@ -10,7 +10,7 @@ static size_t get_bin_index(size_t size)
     return (size > 127 ? 127 : size);
 }
 
-t_block remove_block(t_block block)
+t_block remove_block_from_bins(t_block block)
 {
     if (!block) return(NULL);
     if (block->next) block->next->prev = block->prev;
@@ -42,8 +42,12 @@ void    release_block(t_block block)
 t_block request_available_block(size_t size)
 {
     size_t  index;
+    t_block bin;
 
     index = get_bin_index(size);
-    return (remove_block(bins[index].next));
+    bin = bins[index].next;
+    while (bin && UNFLAG(bin->size) < size)
+        bin = bin->next;    
+    return (remove_block_from_bins(bin));
 }
 

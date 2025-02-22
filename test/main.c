@@ -2,8 +2,14 @@
 
 #define MOVE_CURSOR_UP  "\033[1A"
 #define CLEAR_LINE      "\033[2K"
+#define RED     "\033[31m"
+#define GREEN   "\033[32m"
+#define WHITE   "\033[97m"
+#define BOLD    "\033[1m"
+#define CLEAR   "\033[0m"
 
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #define ARRAY_CAPACITY 2048
@@ -80,17 +86,11 @@ void    rand_free(void)
     // show_alloc_mem();
 }
 
-
-int main(int ac, char *av[])
+int    rand_test(int seed)
 {
-    int seed;
-
-    ac -= 1;
-    av += 1;
-    seed = ac ? atoi(*av) : time(NULL);
-    print_fd(1, "seed: %d\n\n", seed);
+    if (seed == 0) seed = time(NULL);
     srand(seed);
-
+    print_fd(1, "%sseed: %d%s\n\n", BOLD, seed, CLEAR);
     full_alloc();
     rand_free();
     full_alloc();
@@ -98,10 +98,23 @@ int main(int ac, char *av[])
     return (0);
 }
 
-// 1739990054 prev_block_size
-// 1739991150 [page_offset] check fragment_block
-// 1739991357 [block -> next/prev] 
+void    shift_arg(int* ac, char ***av)
+{
+    (*ac) -= 1;
+    (*av) += 1;
+}
 
+int main(int ac, char *av[])
+{
+    shift_arg(&ac, &av);
 
+    if (ac == 0) return(rand_test(0));
+    if (ac == 1) return(rand_test(atoi(*av)));
 
-// infinit loop 1740142750
+    if (strcmp(*av, "--heavy") == 0) {
+        shift_arg(&ac, &av);
+        int count = ac ? atoi(*av) : 2048;
+        while (count--) rand_test(0);
+    }
+    return (0);
+}

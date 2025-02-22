@@ -3,8 +3,7 @@
 
 #include "data_struct.h"
 
-void     init_block(t_block block, size_t size, size_t page_offset);
-
+void    *ft_bzero(void* addr, size_t size);
 
 // utils
 t_page  global_pages(t_page page);
@@ -16,12 +15,7 @@ t_page  get_page_from_block(t_block block);
 
 void*   addr_offset(void *addr, size_t offset);
 
-t_block set_block_flag(t_block block, size_t flag);
-void unset_block_flag(t_block block, size_t flag);
-
-t_block set_block_size(t_block block, size_t size);
-
-t_block remove_block(t_block block);
+t_block remove_block_from_bins(t_block block);
 
 // alloc / release
 t_block request_new_block(size_t size);

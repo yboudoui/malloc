@@ -9,6 +9,7 @@ static inline size_t align(size_t size)
 void*   malloc(size_t size)
 {
     t_block block;
+    t_page  page;
 
     if (size == 0) return (NULL);
     size = align(size);
@@ -16,9 +17,9 @@ void*   malloc(size_t size)
     if(block == NULL)
         block = request_new_block(size);
     debug_show_alloc_mem("malloc");
-
-    get_page_from_block(block)->block_count += 1;
-    unset_block_flag(block, FREE);
+    page = get_page_from_block(block);
+    page->block_count += 1;
+    block->size &= ~FREE;
     return (addr_offset(block, SIZEOF_BLOCK));
 }
 
@@ -30,12 +31,10 @@ void    free(void* addr)
     block = addr_offset(addr, -SIZEOF_BLOCK);
     if (block == NULL) return;
     block = coalesce(block);
-
     page = get_page_from_block(block);
-    release_block(block);
 
-    // page->block_count -= 1;
-    set_block_flag(block, FREE);
+    release_block(block);
+    block->size |= FREE;
 
     debug_show_alloc_mem("free");
     if (page->block_count == 1) release_page(page);
