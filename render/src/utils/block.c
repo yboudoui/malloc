@@ -1,52 +1,40 @@
 #include "utils.h"
-/*
-t_block coalesce(t_block block)
+
+t_block* fragment_block(t_block* block, size_t size)
 {
-    t_block prev;
-    t_page  page;
-    t_block next;
+    t_block* new_block;
 
-    prev = get_prev_block(block);
-    while (prev && (prev->size & FREE)) {
-        block = prev;
-        prev = get_prev_block(block);
-    }
-    page = get_page_from_block(block);
-
-    block->size = UNFLAG(block->size);
-    next = get_next_block(block);
-    while (next && (next->size & FREE)) {
-        block->size += SIZEOF_BLOCK + UNFLAG(next->size);
-        remove_block_from_bins(next);
-        page->block_count -= 1;
-        page->used_space -= SIZEOF_BLOCK + UNFLAG(next->size);
-        next = get_next_block(next);
-    }
     remove_block_from_bins(block);
-    get_next_block(block)->prev_block_size = block->size;
-    return (block);
+    if (UNFLAG(block->size) == (SIZEOF_BLOCK + size)) return (block);
+    block->size = FLAG(block->size) | (UNFLAG(block->size) - (SIZEOF_BLOCK + size));
+
+    new_block = ft_bzero(get_next_block(block), SIZEOF_BLOCK);
+    new_block->prev_block = block;
+    new_block->size = size;
+    new_block->page = block->page;
+    return (new_block);
 }
-*/
 
-t_block coalesce(t_block block)
+t_block* coalesce_block(t_block* block)
 {
-    t_page  page;
-    t_block next;
+    t_block* next;
+    size_t  new_size;
 
-    while (block->prev_block_size & FREE)
-        block = addr_offset(block, -(SIZEOF_BLOCK + UNFLAG(block->prev_block_size)));
-    page = get_page_from_block(block);
+    if (block == NULL) return (NULL);
+    block->size |= FREE;
+    while (block->prev_block && block->prev_block->size & FREE)
+        block = block->prev_block;
 
-    block->size = UNFLAG(block->size);
+    remove_block_from_bins(block);
+
+    new_size = UNFLAG(block->size);
     next = get_next_block(block);
     while (next && (next->size & FREE)) {
-        block->size += SIZEOF_BLOCK + UNFLAG(next->size);
+        new_size += SIZEOF_BLOCK + UNFLAG(next->size);
         remove_block_from_bins(next);
-        page->block_count -= 1;
-        page->used_space -= SIZEOF_BLOCK + UNFLAG(next->size);
         next = get_next_block(next);
     }
-    remove_block_from_bins(block);
-    get_next_block(block)->prev_block_size = block->size;
+    block->size = new_size | FREE;
+    get_next_block(block)->prev_block = block;
     return (block);
 }

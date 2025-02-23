@@ -8,36 +8,20 @@ static inline size_t align(size_t size)
 
 void*   malloc(size_t size)
 {
-    t_block block;
-    t_page  page;
-
-    if (size == 0) return (NULL);
-    size = align(size);
-    block = request_available_block(size);
-    if(block == NULL)
-        block = request_new_block(size);
-    debug_show_alloc_mem("malloc");
-    page = get_page_from_block(block);
-    page->block_count += 1;
-    block->size &= ~FREE;
+    t_block* block;
+    
+    if (size == 0) return (0);
+    block = request_block(align(size));
     return (addr_offset(block, SIZEOF_BLOCK));
 }
 
 void    free(void* addr)
 {
-    t_block block;
-    t_page  page;
-
+    t_block* block;
+    
+    if (addr == NULL) return;
     block = addr_offset(addr, -SIZEOF_BLOCK);
-    if (block == NULL) return;
-    block = coalesce(block);
-    page = get_page_from_block(block);
-
-    release_block(block);
-    block->size |= FREE;
-
-    debug_show_alloc_mem("free");
-    if (page->block_count == 1) release_page(page);
+    release_block(coalesce_block(block));
 }
 
 void	*memcpy(void *dest, const void *src, size_t n)
@@ -56,7 +40,7 @@ void	*memcpy(void *dest, const void *src, size_t n)
 /*
 void    *realloc(void *ptr, size_t size)
 {
-    t_block block;
+    t_block* block;
     void    *new_addr;
     size_t  old_size;
 
