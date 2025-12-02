@@ -3,19 +3,22 @@
 
 #include "data_struct.h"
 
+// Access to singleton
+t_heap* get_heap(void);
 
-// utils
+// Utils
 void    *ft_bzero(void* addr, size_t size);
-t_page*  global_pages(t_page* page);
+void*   ft_memcpy(void *dest, const void *src, size_t n);
 void*   addr_offset(void *addr, size_t offset);
-// t_page*  get_page_from_block(t_block* block);
 
+// Block Management
 t_block* get_next_block(t_block* block);
 t_block* remove_block_from_bins(t_block* block);
+void     insert_block_to_bins(t_block* block);
 
-// alloc / release
-t_page*  request_page(size_t size);
+// Alloc / Release
 t_block* request_block(size_t size);
+t_page*  request_page(t_zone_type type, size_t size);
 
 t_block* coalesce_block(t_block* block);
 t_block* fragment_block(t_block* block, size_t size);
