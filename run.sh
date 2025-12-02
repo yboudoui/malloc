@@ -2,22 +2,34 @@
 
 # Detect OS
 OS="$(uname -s)"
-
-# Get the directory where the script is located
 LIB_PATH=$(pwd)
+LIB_NAME="libft_malloc_$(uname -m)_$(uname -s).so" # Matches your Makefile name
+SYMLINK="libft_malloc.so"
 
-echo "Running test with custom malloc on $OS..."
+# Ensure the library exists
+if [ ! -f "$SYMLINK" ]; then
+    echo "Error: $SYMLINK not found. Did you run 'make'?"
+    exit 1
+fi
 
 if [ "$OS" = "Linux" ]; then
-    # Linux configuration
-    export LD_LIBRARY_PATH=$LIB_PATH:$LD_LIBRARY_PATH
-    ./test_program $@
+    # --- LINUX ---
+    # LD_PRELOAD forces the dynamic linker to load your lib BEFORE libc.
+    export LD_PRELOAD=$LIB_PATH/$SYMLINK
+    
+    # Run the command passed as argument
+    exec "$@"
+
 elif [ "$OS" = "Darwin" ]; then
-    # macOS configuration
-    export DYLD_LIBRARY_PATH=$LIB_PATH
-    export DYLD_INSERT_LIBRARIES=$LIB_PATH/libft_malloc.so
+    # --- MACOS ---
+    # DYLD_INSERT_LIBRARIES is the macOS equivalent of LD_PRELOAD
+    export DYLD_INSERT_LIBRARIES=$LIB_PATH/$SYMLINK
     export DYLD_FORCE_FLAT_NAMESPACE=1
-    ./test_program $@
+    
+    # Run the command passed as argument
+    exec "$@"
+
 else
     echo "Unknown OS"
+    exit 1
 fi
