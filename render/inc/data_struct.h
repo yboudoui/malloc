@@ -4,6 +4,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// 1. Alignment configuration
+#define ALIGNMENT 16
+
+// 2. Zone Limits (Required for bins.c and page.c)
+#define TINY_MAX        128
+#define SMALL_MAX       1024
+
 typedef struct s_block  t_block;
 typedef struct s_page   t_page;
 
@@ -13,27 +20,35 @@ typedef enum e_zone_type {
     LARGE
 } t_zone_type;
 
+// Block structure with strict alignment
 struct s_block {
-    t_block* prev_block; // Physical previous block
-    size_t   size;       // Size | Flag
+    t_block* prev_block;
+    size_t   size;
     t_page*  page;
-    t_block* next;       // Logical next (in free bins)
-    t_block* prev;       // Logical prev (in free bins)
-};
+    t_block* next;
+    t_block* prev;
+} __attribute__((aligned(ALIGNMENT)));
 
 struct s_page {
     t_page*          next;
     t_page*          prev;
     size_t           block_count;
     t_zone_type      type;
-    struct s_block   free_list_head; // Not used as list, but as the first block addr
 };
 
-// Global state structure (Allowed: 1 global for allocs)
+// Global Heap Structure
 #define MAX_BINS 128
 typedef struct s_heap {
-    t_page*  pages[3]; // 0: TINY, 1: SMALL, 2: LARGE
-    t_block* bins[MAX_BINS];
+    struct {
+        t_page*  tiny;
+        t_page*  small;
+        t_page*  large;
+    } pages;
+    struct {
+        t_block* tiny;
+        t_block* small;
+        t_block* large;
+    } bins;
 } t_heap;
 
 #define SIZEOF_BLOCK    sizeof(struct s_block)
@@ -41,16 +56,6 @@ typedef struct s_heap {
 
 #define UNFLAG(size)    (size_t)(size & ~0b11)
 #define FLAG(size)      (size_t)(size & 0b11)
-
 #define FREE 1
-
-// 16 bytes alignment is standard for x86_64 (long double / vector instructions)
-#define ALIGNMENT       16
-
-// Subject Limits
-#define TINY_MAX        128
-#define SMALL_MAX       1024
-// Zone sizes must hold at least 100 allocations
-// We calculate this dynamically in page.c, but logic is based on these maxes
 
 #endif // DATA_STRUCT_H

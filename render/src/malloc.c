@@ -31,6 +31,7 @@ void*   malloc(size_t size)
 
 void    free(void* addr)
 {
+    // write(1, "MY FREE CALLED\n", 15);
     t_block* block;
     
     if (addr == NULL) return;
@@ -44,11 +45,13 @@ void    free(void* addr)
     release_block(coalesce_block(block));
 }
 
+
 void    *realloc(void *ptr, size_t size)
 {
     t_block* block;
     void    *new_ptr;
     size_t  old_size;
+    size_t  copy_size;
 
     if (ptr == NULL)
         return malloc(size);
@@ -61,16 +64,16 @@ void    *realloc(void *ptr, size_t size)
     block = addr_offset(ptr, -((long)SIZEOF_BLOCK));
     old_size = UNFLAG(block->size);
 
-    // Optimization: if new size fits in old size, just return (or split)
-    // For compliance with subject "creates a new allocation", we do the standard way
-    // unless size is exactly the same or we want to implement in-place expansion.
-    if (size <= old_size)
-        return ptr; // Simple reuse
+    if (align(size) == old_size) // Same aligned size? No op.
+        return ptr;
 
     new_ptr = malloc(size);
     if (!new_ptr) return (NULL);
 
-    ft_memcpy(new_ptr, ptr, old_size);
+    // FIX: Copy the smaller of the two sizes
+    copy_size = (old_size < size) ? old_size : size;
+    ft_memcpy(new_ptr, ptr, copy_size);
+    
     free(ptr);
     return (new_ptr);
 }

@@ -3,6 +3,9 @@
 
 #include <stddef.h>
 
+#define TINY_MAX        128
+#define SMALL_MAX       1024
+
 #define EXPORT __attribute__((visibility("default")))
 
 EXPORT void free(void *ptr);

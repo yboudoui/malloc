@@ -2,7 +2,8 @@
 
 void*   addr_offset(void *addr, size_t offset)
 {
-    return (addr ? (uint8_t*)addr + offset : NULL);
+    if (addr == NULL) return NULL;
+    return (uint8_t*)addr + offset;
 }
 
 void    *ft_bzero(void* addr, size_t size)
