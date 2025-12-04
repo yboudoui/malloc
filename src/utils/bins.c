@@ -10,11 +10,13 @@ t_block** get_bin_head(t_zone_type type)
 
 static t_block* find_free_block(t_zone_type type, size_t size)
 {
-    t_block *block = *get_bin_head(type);
-
+    t_block *block;
+    size_t blk_size;
+    
+    block = *get_bin_head(type);
     while (block) {
-        if (UNFLAG(block->size) >= size)
-            return (block);
+        blk_size = get_block_size(block);
+        if (blk_size + SIZEOF_BLOCK + ALIGNMENT >= size) return (block);
         block = block->next;
     }
     return (NULL);
@@ -29,52 +31,72 @@ static t_zone_type get_size_type(size_t size)
 
 t_block* remove_block_from_bins(t_block* block)
 {
-    if (!block) return (NULL);
+    t_block **head;
+
+    if (block == NULL) return (NULL);
     
     if (block->next) block->next->prev = block->prev;
     if (block->prev) block->prev->next = block->next;
     
-    t_block **head = get_bin_head(block->page->type);
-    if (*head == block) {
-        *head = block->next;
-    }
+    head = get_bin_head(block->page->type);
+    if (*head == block) *head = block->next;
 
     block->next = NULL;
     block->prev = NULL;
+    set_block_not_free(block);
     return (block);
 }
 
 void    insert_block_to_bins(t_block* block)
 {
-    if (!block) return;
+    t_block **head;
 
-    t_block **head = get_bin_head(block->page->type);
+    if (block == NULL) return;
+    set_block_free(block);
 
+    head = get_bin_head(block->page->type);
     block->prev = NULL;
     block->next = *head;
-    if (*head) {
-        (*head)->prev = block;
-    }
+    if (*head) (*head)->prev = block;
     *head = block;
+}
+
+void    set_block_free(t_block *block)
+{
+    block->size |= FREE;
+}
+
+void    set_block_not_free(t_block *block)
+{
+    block->size &= ~FREE;
+}
+
+
+size_t  get_block_size(t_block *block)
+{
+    return (UNFLAG(block->size));
+}
+
+void    init_block(t_block *block, t_page *page, size_t size)
+{
+    block->prev_block = NULL;
+    block->size = size;
+    block->page = page;
+    block->next = NULL;
+    block->prev = NULL;
 }
 
 t_block* request_block(size_t size)
 {
     t_block*    block;
+    t_page*     page;
     t_zone_type type;
 
     type = get_size_type(size);
-
-    if (type == LARGE) {
-        t_page *page = request_page(LARGE, size);
-        if (!page) return (NULL);
-        return (t_block*)addr_offset(page, SIZEOF_PAGE);
-    }
-    
     block = find_free_block(type, size);
-
-    if (!block) {
-        if (!request_page(type, size)) return (NULL);
+    if (block == NULL) {
+        page = request_page(type, size);
+        if (page == NULL) return (NULL);
         block = find_free_block(type, size);
     }
 
@@ -83,21 +105,11 @@ t_block* request_block(size_t size)
 
 void    release_block(t_block* block)
 {
-    if (!block) return;
-
-    block->page->block_count--;
-
+    if (block == NULL) return;
     if (block->page->type == LARGE) {
         release_page(block->page);
         return;
     }
-
-    // 1. Mark as FREE
-    block->size |= FREE;
-    
-    // 2. Merge neighbors (removes neighbors from bins if used)
     block = coalesce_block(block);
-    
-    // 3. Insert the final big block into the bin
     insert_block_to_bins(block);
 }

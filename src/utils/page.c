@@ -33,7 +33,7 @@ size_t   compute_mmap_size(t_zone_type type, size_t alloc_size)
     return (pages_needed * page_size);
 }
 
-static void page_add_front(t_page *page)
+static void register_page(t_page *page)
 {
     t_page **head = get_page_head(page->type);
     
@@ -44,60 +44,50 @@ static void page_add_front(t_page *page)
     *head = page;
 }
 
+static t_page *alloc_page(size_t size) 
+{
+    t_page*  page;
+
+    page = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (page == MAP_FAILED) return (NULL);
+    return (page);
+}
+
+static void init_page(t_page *page, t_zone_type type, size_t size)
+{
+    page->next = NULL;
+    page->prev = NULL;
+    page->size = size;
+    page->block_count = 0;
+    page->type = type;
+}
+
 t_page* request_page(t_zone_type type, size_t size)
 {
     t_page*  page;
     t_block* block;
     size_t   map_size;
 
-    // A. Allocate Memory
     map_size = compute_mmap_size(type, size);
-    page = mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    if (page == MAP_FAILED) return (NULL);
+    page = alloc_page(map_size);
+    init_page(page, type, map_size);
+    register_page(page);
 
-    // B. Initialize Page Header
-    page->type = type;
-    page->block_count = 0;
-    page_add_front(page);
+    block = addr_offset(page, SIZEOF_PAGE);
+    init_block(block, page, (map_size - SIZEOF_PAGE - SIZEOF_BLOCK));
+    insert_block_to_bins(block);
 
-    // C. Initialize the First Block
-    block = (t_block*)addr_offset(page, SIZEOF_PAGE);
-    block->page = page;
-    block->size = (map_size - SIZEOF_PAGE - SIZEOF_BLOCK) | FREE;
-    // block->next/prev/prev_block are 0 because mmap zeros memory
-
-    // D. Final Setup
-    if (type == LARGE) {
-        block->size &= ~FREE; // Mark allocated immediately
-        page->block_count = 1;
-    } else {
-        insert_block_to_bins(block); // Add to free list
-    }
-
+    page->block_count += 1;
     return (page);
 }
 
 void    release_page(t_page* page)
 {
-    // 1. Unlink page from the list
-    t_page **head = get_page_head(page->type);
+    t_page **head;
+    
+    head = get_page_head(page->type);
     if (page->next) page->next->prev = page->prev;
     if (page->prev) page->prev->next = page->next;
     else *head = page->next;
-
-    // 2. Determine the size to unmap
-    size_t alloc_size = 0;
-    
-    if (page->type == LARGE) {
-        // For LARGE, the size depends on the block size
-        t_block *block = (t_block*)addr_offset(page, SIZEOF_PAGE);
-        alloc_size = UNFLAG(block->size);
-    }
-    // For TINY/SMALL, alloc_size is ignored by compute_mmap_size 
-    // because it uses the fixed * 100 constants.
-
-    // 3. Re-use the calculation logic (Guarantees consistency)
-    size_t map_size = compute_mmap_size(page->type, alloc_size);
-
-    munmap((void*)page, map_size);
+    munmap((void*)page, page->size);
 }

@@ -1,5 +1,3 @@
-# --- Variables ---
-
 ifeq ($(HOSTTYPE),)
 	HOSTTYPE := $(shell uname -m)_$(shell uname -s)
 endif
@@ -8,15 +6,14 @@ NAME		= libft_malloc_$(HOSTTYPE).so
 SYMLINK		= libft_malloc.so
 
 CC			= gcc
-CFLAGS		= -Wall -Wextra -Werror -fPIC -g3
+CFLAGS		= -Wall -Wextra -Werror -fPIC -g
+# CFLAGS		+= -O0 -fno-omit-frame-pointer
 LDFLAGS		= -shared
 
-# Directories
 SRCDIR		= src
 OBJDIR		= obj
 INCDIR		= inc 
 
-# Sources (Based on the refactored code structure)
 SRC_FILES	= malloc.c \
 			  show.c \
 			  utils/bins.c \
@@ -26,8 +23,6 @@ SRC_FILES	= malloc.c \
 
 OBJS		= $(addprefix $(OBJDIR)/, $(SRC_FILES:.c=.o))
 
-# --- Rules ---
-
 all: $(NAME)
 
 $(NAME): $(OBJS)
@@ -36,7 +31,6 @@ $(NAME): $(OBJS)
 	@echo "Creating symlink $(SYMLINK)..."
 	@ln -sf $(NAME) $(SYMLINK)
 
-# Compilation rule (handles subdirectories in obj/)
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -I$(INCDIR) -c $< -o $@

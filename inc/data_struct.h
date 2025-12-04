@@ -30,11 +30,12 @@ struct s_block {
 } __attribute__((aligned(ALIGNMENT)));
 
 struct s_page {
-    t_page*          next;
-    t_page*          prev;
-    size_t           block_count;
-    t_zone_type      type;
-};
+    t_page*     next;
+    t_page*     prev;
+    size_t      size;
+    size_t      block_count;
+    t_zone_type type;
+} __attribute__((aligned(ALIGNMENT)));
 
 // Global Heap Structure
 #define MAX_BINS 128
@@ -57,5 +58,12 @@ typedef struct s_heap {
 #define UNFLAG(size)    (size_t)(size & ~0b11)
 #define FLAG(size)      (size_t)(size & 0b11)
 #define FREE 1
+
+size_t  align(size_t size);
+size_t  get_block_size(t_block *block);
+void    set_block_free(t_block *block);
+void    set_block_not_free(t_block *block);
+
+void    init_block(t_block *block, t_page *page, size_t size);
 
 #endif // DATA_STRUCT_H
