@@ -1,13 +1,6 @@
 #include "malloc.h"
 #include "utils.h"
 
-// Global singleton instance
-t_heap g_heap = {0};
-
-t_heap* get_heap(void) {
-    return &g_heap;
-}
-
 inline size_t align(size_t size)
 {
     if (size % ALIGNMENT == 0) return size;
@@ -36,7 +29,6 @@ void    free(void* addr)
     release_block(block);
 }
 
-
 void    *realloc(void *ptr, size_t size)
 {
     t_block* block;
@@ -47,15 +39,14 @@ void    *realloc(void *ptr, size_t size)
     if (ptr == NULL) return malloc(size);
     if (size == 0) return (free(ptr), NULL);
 
-    block = addr_offset(ptr, -((long)SIZEOF_BLOCK));
-    old_size = UNFLAG(block->size);
+    block = addr_offset(ptr, -SIZEOF_BLOCK);
+    old_size = get_block_size(block);
 
     if (align(size) == old_size) return ptr;
 
     new_ptr = malloc(size);
     if (!new_ptr) return (NULL);
 
-    // FIX: Copy the smaller of the two sizes
     copy_size = (old_size < size) ? old_size : size;
     ft_memcpy(new_ptr, ptr, copy_size);
     

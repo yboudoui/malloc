@@ -1,9 +1,9 @@
 #include "utils.h"
 
-void*   addr_offset(void *addr, size_t offset)
+void*   addr_offset(void *addr, long offset)
 {
     if (addr == NULL) return NULL;
-    return (uint8_t*)addr + offset;
+    return (void*)((uintptr_t)addr + offset);
 }
 
 void    *ft_bzero(void* addr, size_t size)
@@ -22,7 +22,7 @@ void	*ft_memcpy(void *dest, const void *src, size_t n)
 	return (dest);
 }
 
-t_block*  get_next_block(t_block* block)
+t_block*  get_next_physical_block(t_block* block)
 {
     size_t  size;
     t_block *next;
@@ -33,7 +33,7 @@ t_block*  get_next_block(t_block* block)
     size = get_block_size(block);
     next = addr_offset(block, SIZEOF_BLOCK + size);
 
-    page_end = (uint8_t*)block->page + block->page->size;
+    page_end = (void*)((uintptr_t)block->page + block->page->size);
 
     if ((void*)next < page_end) return (next);
     return (NULL);

@@ -5,21 +5,29 @@ endif
 NAME		= libft_malloc_$(HOSTTYPE).so
 SYMLINK		= libft_malloc.so
 
-CC			= gcc
-CFLAGS		= -Wall -Wextra -Werror -fPIC -g
-# CFLAGS		+= -O0 -fno-omit-frame-pointer
-LDFLAGS		= -shared
-
 SRCDIR		= src
 OBJDIR		= obj
 INCDIR		= inc 
 
+CC			= gcc
+CFLAGS		= -Wall -Wextra -Werror
+CFLAGS		+=  -I $(INCDIR)
+CFLAGS		+= -fPIC 
+CFLAGS		+= -g
+
+LDFLAGS		= -shared
+
+
+
 SRC_FILES	= malloc.c \
 			  show.c \
+			  utils/heap.c \
 			  utils/bins.c \
 			  utils/block.c \
 			  utils/page.c \
 			  utils/utils.c
+
+TEST_FILES	= test.c
 
 OBJS		= $(addprefix $(OBJDIR)/, $(SRC_FILES:.c=.o))
 
@@ -49,7 +57,7 @@ re: fclean all
 
 # Compiles the test program linking against your shared library
 test: $(NAME)
-	$(CC) $(CFLAGS) -o test_program test.c -L. -lft_malloc_$(HOSTTYPE) -Wl,-rpath=.
+	$(CC) $(CFLAGS) -o test_program $(SRCDIR)/$(TEST_FILES) -L. -lft_malloc_$(HOSTTYPE) -Wl,-rpath=.
 	@echo "\nRun ./run.sh to execute the test."
 
 .PHONY: all clean fclean re test

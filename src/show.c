@@ -108,7 +108,7 @@ static size_t print_blocks_in_page(t_page *page)
         }
 
         // Get next block and check boundary
-        t_block *next = get_next_block(block);
+        t_block *next = get_next_physical_block(block);
         
         // If next is NULL (end of logic) or pointer is out of bounds
         if (!next || (void*)next > limit) break;

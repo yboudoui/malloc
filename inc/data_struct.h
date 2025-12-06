@@ -22,7 +22,6 @@ typedef enum e_zone_type {
 
 // Block structure with strict alignment
 struct s_block {
-    t_block* prev_block;
     size_t   size;
     t_page*  page;
     t_block* next;
@@ -63,7 +62,5 @@ size_t  align(size_t size);
 size_t  get_block_size(t_block *block);
 void    set_block_free(t_block *block);
 void    set_block_not_free(t_block *block);
-
-void    init_block(t_block *block, t_page *page, size_t size);
 
 #endif // DATA_STRUCT_H

@@ -2,14 +2,6 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-t_page**  get_page_head(t_zone_type type)
-{
-    t_heap *heap = get_heap();
-    if (type == TINY) return &heap->pages.tiny;
-    if (type == SMALL) return &heap->pages.small;
-    return &heap->pages.large;
-}
-
 size_t   compute_mmap_size(t_zone_type type, size_t alloc_size)
 {
     size_t page_size = sysconf(_SC_PAGESIZE);
@@ -74,20 +66,28 @@ t_page* request_page(t_zone_type type, size_t size)
     register_page(page);
 
     block = addr_offset(page, SIZEOF_PAGE);
-    init_block(block, page, (map_size - SIZEOF_PAGE - SIZEOF_BLOCK));
-    insert_block_to_bins(block);
+    block->size = (map_size - SIZEOF_PAGE - SIZEOF_BLOCK);
+    block->page = page;
 
-    page->block_count += 1;
+    alloc_block(block);
     return (page);
 }
 
 void    release_page(t_page* page)
 {
     t_page **head;
-    
-    head = get_page_head(page->type);
+    t_block *block;
+
+    block = addr_offset(page, SIZEOF_PAGE);
+    while (block) {
+        free_block(block);
+        block = get_next_physical_block(block);
+    }
+
     if (page->next) page->next->prev = page->prev;
     if (page->prev) page->prev->next = page->next;
-    else *head = page->next;
+
+    head = get_page_head(page->type);
+    if (*head == page) *head = page->next;
     munmap((void*)page, page->size);
 }
